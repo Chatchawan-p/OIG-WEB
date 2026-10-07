@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFFICE OF INSPECTOR GENERAL</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { navy: { DEFAULT: '#0B1E36', light: '#173154' }, gold: { DEFAULT: '#D4AF37', light: '#F3E5AB' } }, fontFamily: { sans: ['Prompt', 'sans-serif'] } } } }
+    </script>
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+<script>
+    // ==========================================
+    // CONFIGURATION (ตั้งค่า API ของ Vercel)
+    // ==========================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbzVUXkskee3B7Ib0-6HTxn78b64hxN1JocBlecVYTBXPBFF0yq8z18jGuV08iKKkQI/exec";
+    const DISCORD_CLIENT_ID = "1557194126611579030";
+
+    // ฟังก์ชันเชื่อมต่อกับ Google Apps Script (Backend)
+    async function apiCall(action, payload = {}) {
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ใช้ text/plain เลี่ยงปัญหา CORS
+                body: JSON.stringify({ action: action, ...payload })
+            });
+            const result = await response.json();
+            if (result.status === 'success') return result.data;
+            throw new Error(result.message);
+        } catch (error) {
+            console.error("API Error:", error);
+            throw error;
+        }
+    }
+</script>
+
+<!-- NAVIGATION BAR -->
+<nav class="bg-navy border-b border-gold shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-20">
+            <div class="flex items-center space-x-3">
+                <img src="https://media.discordapp.net/attachments/886979097023103066/886979184004583434/OIG.png?ex=6ac654bc&is=6ac5033c&hm=a7700997efa4e6e067edc9eb234d81740bfe8565e22589aa44180c35dceee417&=&format=webp&quality=lossless" alt="OIG Logo" class="w-14 h-14 object-contain drop-shadow-md">
+                <div class="flex flex-col">
+                    <span class="text-white text-base sm:text-lg font-bold">สำนักงานจเรตำรวจประชารักษ์ซิตี้</span>
+                    <span class="text-gold text-xs sm:text-sm font-medium uppercase">Office of Inspector General</span>
+                </div>
+            </div>
+
+            <!-- เมนู (จะแสดงเฉพาะคนล็อกอินแล้วผ่าน JS) -->
+            <div id="nav-menus" class="hidden lg:flex items-center space-x-2">
+                <button onclick="switchTab('home')" id="nav-home" class="px-3 py-2 rounded-md text-sm font-medium text-gold border-b-2 border-gold transition">หน้าหลัก</button>
+                <button onclick="switchTab('roster')" id="nav-roster" class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-gold transition">รายชื่อสมาชิก</button>
+                <button onclick="switchTab('rulebook')" id="nav-rulebook" class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-gold transition">บทลงโทษ</button>
+                <button onclick="switchTab('penalty')" id="nav-penalty" class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-gold transition">พิจารณาโทษ</button>
+                <button onclick="switchTab('roles')" id="nav-roles" class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-gold transition">ตั้งค่าระบบ</button>
+                
+                <div class="flex items-center space-x-3 bg-navy-light px-4 py-1.5 rounded-full border border-gold/40 ml-4 shadow-sm">
+                    <img id="nav-avatar" src="" class="h-8 w-8 rounded-full border border-gold object-cover">
+                    <div class="flex flex-col text-left">
+                        <span id="nav-username" class="text-white text-xs font-bold leading-tight">...</span>
+                        <span id="nav-role" class="text-gold text-[10px] uppercase font-bold tracking-wider">...</span>
+                    </div>
+                    <button onclick="logout()" class="ml-2 pl-3 border-l border-gold/30 text-rose-400 hover:text-rose-500 transition" title="ออกจากระบบ"><i class="fa-solid fa-right-from-bracket text-lg"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="flex-grow max-w-5xl mx-auto px-4 w-full py-10" id="main-content" style="display:none;">
+    
+    <!-- ============================================== -->
+    <!-- หน้า LOGIN -->
+    <!-- ============================================== -->
+    <div id="view-login" class="hidden max-w-md mx-auto mt-6 animate-fade-in-up">
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-gold">
+            <div class="bg-navy px-6 py-8 text-center relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#d4af37_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                <img src="https://media.discordapp.net/attachments/886979097023103066/886979184004583434/OIG.png?ex=6ac654bc&is=6ac5033c&hm=a7700997efa4e6e067edc9eb234d81740bfe8565e22589aa44180c35dceee417&=&format=webp&quality=lossless" alt="OIG Logo" class="w-20 h-20 mx-auto mb-3 object-contain drop-shadow-lg relative z-10">
+                <h1 class="text-2xl font-extrabold text-white tracking-tight relative z-10">ระบบจเรตำรวจ</h1>
+            </div>
+            <div class="p-8">
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold text-navy mb-2">รหัสประจำตัวเจ้าหน้าที่ (Police ID)</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"><i class="fa-solid fa-id-badge text-slate-400"></i></div>
+                            <input type="text" id="login_police_id" onkeyup="if(event.key === 'Enter') loginWithPoliceId()" class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-300 shadow-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-navy text-sm" placeholder="กรอกรหัสประจำตัว...">
+                        </div>
+                    </div>
+                    <button onclick="loginWithPoliceId()" class="w-full bg-navy hover:bg-navy-light text-gold font-bold py-3.5 rounded-xl shadow-md transition border border-gold"><i class="fa-solid fa-right-to-bracket mr-2"></i> เข้าสู่ระบบ</button>
+                    
+                    <div class="relative flex items-center py-3">
+                        <div class="flex-grow border-t border-slate-200"></div><span class="mx-4 text-slate-400 text-xs font-medium">หรือเข้าสู่ระบบผ่าน</span><div class="flex-grow border-t border-slate-200"></div>
+                    </div>
+                    
+                    <button onclick="loginDiscord()" class="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-3.5 rounded-xl shadow-sm transition border border-[#4752C4]"><i class="fa-brands fa-discord mr-2 text-xl"></i> ล็อกอินด้วย Discord</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- หน้าไม่มีสิทธิ์เข้าถึง -->
+    <!-- ============================================== -->
+    <div id="view-denied" class="hidden bg-white border-2 border-rose-500 rounded-2xl shadow-xl max-w-2xl mx-auto mt-8 text-center p-12">
+        <i class="fa-solid fa-lock text-6xl text-rose-500 mb-4"></i>
+        <h2 class="text-2xl font-bold text-navy">คุณไม่มีสิทธิ์เข้าถึงระบบนี้</h2>
+        <p class="text-slate-600 mt-2">ระบบจเรตำรวจจำกัดสิทธิ์เฉพาะเจ้าหน้าที่ที่ได้รับการอนุมัติเท่านั้น</p>
+        <button onclick="logout()" class="mt-6 bg-slate-100 text-slate-600 px-6 py-2 rounded-lg font-bold">กลับสู่หน้าล็อกอิน</button>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- แอปหลัก (แสดงเมื่อเข้าสู่ระบบผ่านแล้ว) -->
+    <!-- ============================================== -->
+    <div id="view-app" class="hidden">
+        
+        <!-- TAB 0: HOME -->
+        <div id="tab-home" class="space-y-6">
+            <div class="relative bg-navy text-white overflow-hidden rounded-2xl shadow-xl border-2 border-gold">
+                <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#d4af37_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                <div class="relative px-6 py-12 sm:px-12 sm:py-16 text-center sm:text-left flex flex-col sm:flex-row items-center gap-8">
+                    <img src="https://media.discordapp.net/attachments/886979097023103066/886979184004583434/OIG.png?ex=6ac654bc&is=6ac5033c&hm=a7700997efa4e6e067edc9eb234d81740bfe8565e22589aa44180c35dceee417&=&format=webp&quality=lossless" class="w-32 h-32 object-contain drop-shadow-xl shrink-0">
+                    <div>
+                        <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mb-2">ยินดีต้อนรับ, <span class="text-gold" id="home_username">...</span></h1>
+                        <p class="text-sm sm:text-base text-slate-300 mb-6 font-medium max-w-xl">เข้าสู่ระบบบริหารจัดการข้อมูลบุคลากรและประวัติทางวินัยของสำนักงานจเรตำรวจ กรุณาปฏิบัติหน้าที่ด้วยความยุติธรรม</p>
+                        <div class="flex flex-wrap justify-center sm:justify-start gap-3">
+                            <button onclick="switchTab('roster')" class="bg-gold text-navy font-bold px-5 py-2.5 rounded-xl shadow-md"><i class="fa-solid fa-magnifying-glass mr-2"></i> ค้นหาประวัติเจ้าหน้าที่</button>
+                            <button onclick="switchTab('penalty')" class="bg-navy-light text-gold font-bold px-5 py-2.5 rounded-xl shadow-md border border-gold"><i class="fa-solid fa-gavel mr-2"></i> บันทึกการลงโทษ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center hover:shadow-md cursor-pointer" onclick="switchTab('rulebook')">
+                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-xl mx-auto mb-4 border border-blue-200"><i class="fa-solid fa-book-open"></i></div>
+                    <h3 class="font-bold text-navy mb-2">ฐานข้อมูลบทลงโทษ</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">ตรวจสอบกฎหมาย อัตราค่าปรับและระยะเวลาจำคุก ของสำนักงานจเรตำรวจ</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center hover:shadow-md cursor-pointer" onclick="switchTab('penalty')">
+                    <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center text-xl mx-auto mb-4 border border-rose-200"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <h3 class="font-bold text-navy mb-2">อัปเดตสถานะวินัย</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">บันทึกพฤติการณ์ความผิด แนบหลักฐานภาพถ่าย และคำนวณวันสิ้นสุดโทษ</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center hover:shadow-md cursor-pointer" onclick="switchTab('roles')">
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center text-xl mx-auto mb-4 border border-emerald-200"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <h3 class="font-bold text-navy mb-2">ตั้งค่าระบบส่วนกลาง</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">จัดการสิทธิ์ผู้ใช้งาน กำหนดประเภทโทษ และตรวจสอบประวัติการทำงาน</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 1: ROSTER & SEARCH -->
+        <div id="tab-roster" class="hidden">
+            <div class="bg-slate-100 py-4 px-6 border-l-4 border-gold rounded-r-xl shadow-sm mb-6 flex justify-between items-center">
+                <div><h2 class="text-2xl font-extrabold text-navy"><i class="fa-solid fa-users-viewfinder text-gold mr-3"></i> ทำเนียบรายชื่อกรมตำรวจ</h2></div>
+                <div class="flex gap-2">
+                    <button onclick="switchTab('add-member')" class="bg-navy text-gold px-4 py-2.5 rounded-lg text-sm font-bold border border-gold shadow-sm"><i class="fa-solid fa-user-plus mr-2"></i> เพิ่มสมาชิก</button>
+                    <button onclick="searchRoster()" class="bg-white text-navy px-4 py-2.5 rounded-lg text-sm font-bold border border-slate-300 shadow-sm"><i class="fa-solid fa-rotate-right mr-2 text-gold"></i> รีเฟรช</button>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-2">ค้นหาเจ้าหน้าที่ / รหัสประจำตัว</label>
+                        <input type="text" id="rosterSearchInput" onkeyup="if(event.key === 'Enter') searchRoster()" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy" placeholder="พิมพ์ชื่อ, รหัส, หรือรุ่น...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-2">กรองสถานะปฏิบัติงาน</label>
+                        <select id="filterEmployment" onchange="searchRoster()" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy">
+                            <option value="">ทั้งหมด</option><option value="รับราชการ">รับราชการอยู่</option><option value="ปลดราชการ">ปลดราชการ</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-2">กรองสถานะวินัย</label>
+                        <select id="filterDiscipline" onchange="searchRoster()" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy">
+                            <option value="">ทั้งหมด</option><option value="0">ปกติ (0)</option><option value="1">ใบเหลือง (1)</option><option value="2">ใบส้ม (2)</option><option value="3">ใบแดง (3+)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="roster-container" class="space-y-6"></div>
+        </div>
+
+        <!-- TAB 1.5: RULEBOOK -->
+        <div id="tab-rulebook" class="hidden">
+            <div class="bg-slate-100 py-4 px-6 border-l-4 border-gold rounded-r-xl shadow-sm mb-6 flex justify-between items-center">
+                <div><h2 class="text-2xl font-extrabold text-navy"><i class="fa-solid fa-book-open text-gold mr-3"></i> ฐานข้อมูลบทลงโทษ</h2></div>
+                <button id="btn-add-rule" onclick="openRuleModal()" class="hidden bg-navy text-gold px-4 py-2.5 rounded-lg text-sm font-bold border border-gold shadow-sm"><i class="fa-solid fa-plus mr-2"></i> เพิ่มบทลงโทษ</button>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-lg">
+                    <table class="w-full text-left text-sm min-w-[1000px]">
+                        <thead class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
+                            <tr><th class="p-4 w-40">หมวดหมู่</th><th class="p-4 w-64">ความผิด / หัวข้อกฎหมาย</th><th class="p-4 min-w-[300px]">รายละเอียดการลงโทษ</th><th class="p-4 text-right w-32">ค่าปรับ</th><th class="p-4 text-right w-32">จำคุก / อื่นๆ</th><th class="p-4 text-center w-24">จัดการ</th></tr>
+                        </thead>
+                        <tbody id="rulebook-container" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: ADD MEMBERS -->
+        <div id="tab-add-member" class="hidden">
+            <div class="bg-white border-2 border-gold rounded-2xl shadow-xl max-w-4xl mx-auto">
+                <div class="bg-navy px-5 py-4 border-b border-gold flex justify-between items-center">
+                    <h3 class="font-bold text-white text-lg">ฟอร์มบันทึกข้อมูล (Batch Insert)</h3>
+                    <button type="button" onclick="addMemberRow()" class="bg-navy-light text-gold px-3 py-1.5 rounded-lg text-xs font-bold border border-gold/50 shadow-sm"><i class="fa-solid fa-plus mr-1"></i> เพิ่มบรรทัด</button>
+                </div>
+                <form id="addMemberForm" onsubmit="submitNewMembers(event)" class="p-6 space-y-6">
+                    <div id="member-rows-container" class="space-y-4">
+                        <div class="member-row flex flex-col md:flex-row gap-4 p-5 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div class="flex-1"><label class="block font-bold text-xs mb-2 text-navy">รุ่น *</label><input type="number" name="gen" required class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5 focus:outline-none focus:ring-2"></div>
+                            <div class="flex-1"><label class="block font-bold text-xs mb-2 text-navy">รหัส *</label><input type="text" name="policeId" required class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5 focus:outline-none focus:ring-2"></div>
+                            <div class="flex-[2]"><label class="block font-bold text-xs mb-2 text-navy">ยศ ชื่อ นามสกุล *</label><input type="text" name="fullName" required class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5 focus:outline-none focus:ring-2"></div>
+                            <button type="button" onclick="removeMemberRow(this)" class="remove-btn hidden text-rose-400 mt-8"><i class="fa-solid fa-trash-can text-lg"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex justify-end pt-4"><button type="submit" class="bg-navy text-gold font-bold px-8 py-3 rounded-xl shadow-md"><i class="fa-solid fa-save mr-2"></i> บันทึกข้อมูล</button></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 3: PENALTY SYSTEM -->
+        <div id="tab-penalty" class="hidden">
+            <div class="bg-white border-2 border-rose-500 rounded-2xl shadow-xl max-w-3xl mx-auto mt-6">
+                <div class="bg-navy px-5 py-4 border-b border-rose-500"><h3 class="font-bold text-white text-lg">ฟอร์มบันทึกบทลงโทษ</h3></div>
+                <form id="penaltyForm" onsubmit="submitPenalty(event)" class="p-6 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label class="block font-bold text-sm mb-2 text-navy">รหัสประจำตัวผู้กระทำผิด *</label><input type="text" id="pen_police_id" required class="w-full border border-slate-300 shadow-sm rounded-xl p-3 focus:outline-none focus:ring-2"></div>
+                        <div><label class="block font-bold text-sm mb-2 text-navy">ประเภทบทลงโทษ *</label><select id="pen_action_type" required class="w-full border border-slate-300 shadow-sm rounded-xl p-3 focus:outline-none focus:ring-2"><option value="" disabled selected>โหลดข้อมูล...</option></select></div>
+                    </div>
+                    <div><label class="block font-bold text-sm mb-2 text-navy">เหตุผล / รายละเอียดความผิด *</label><textarea id="pen_reason" required rows="3" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 focus:outline-none focus:ring-2"></textarea></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-slate-200 pt-6">
+                        <div>
+                            <label class="block font-bold text-sm mb-2 text-navy">ระยะเวลา *</label>
+                            <select id="pen_type" required onchange="togglePenaltyDurationInput()" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 focus:outline-none focus:ring-2">
+                                <option value="ถาวร">ถาวร</option><option value="ระบุเดือน">กำหนดเป็นเดือน</option><option value="ระบุวัน">กำหนดเป็นวัน</option>
+                            </select>
+                        </div>
+                        <div id="pen_month_container" class="hidden"><label class="block font-bold text-sm mb-2 text-navy">จำนวนเดือน *</label><input type="number" id="pen_months" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 focus:outline-none focus:ring-2"></div>
+                        <div id="pen_date_container" class="hidden col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="block font-bold text-sm mb-2 text-navy">วันที่เริ่มต้น *</label><input type="date" id="pen_start_date" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 focus:outline-none focus:ring-2"></div>
+                            <div><label class="block font-bold text-sm mb-2 text-rose-600">วันที่สิ้นสุด *</label><input type="date" id="pen_end_date" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 focus:outline-none focus:ring-2"></div>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-200 pt-6"><label class="block font-bold text-sm mb-2 text-navy">รูปลิงก์หลักฐาน (URL หรือ Base64) *</label><input type="file" id="pen_file" accept="image/*" required class="w-full text-sm border border-slate-300 p-2 rounded-xl bg-white focus:outline-none"></div>
+                    <div class="flex justify-end pt-4"><button type="submit" class="bg-rose-600 text-white font-bold px-8 py-3 rounded-xl shadow-md">ยืนยันการลงโทษ</button></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 4: ROLES & SYSTEM SETTINGS -->
+        <div id="tab-roles" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- จัดการสิทธิ์ -->
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col">
+                    <h3 class="text-xl font-bold text-navy mb-4 border-b border-slate-100 pb-3">จัดการยศผู้ใช้งาน</h3>
+                    <div class="flex flex-col sm:flex-row gap-3 mb-5">
+                        <input type="text" id="role_discord_id" placeholder="กรอก ID..." class="flex-grow border border-slate-300 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2">
+                        <div class="flex gap-2 shrink-0">
+                            <select id="role_select" class="border border-slate-300 rounded-lg p-2.5 text-sm focus:outline-none">
+                                <option value="Admin">แอดมิน (Admin)</option><option value="Guest">ถอดยศ (Guest)</option>
+                                <option value="Screener" id="opt-screener" class="hidden">คัดกรอง (Screener)</option>
+                            </select>
+                            <button onclick="updateRole()" class="bg-navy text-white px-5 rounded-lg font-bold text-sm">ปรับยศ</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl flex-grow">
+                        <table class="w-full text-left text-sm"><thead class="bg-slate-100 text-slate-600"><tr><th class="p-3">Discord ID</th><th class="p-3">ชื่อ</th><th class="p-3">ยศ</th></tr></thead><tbody id="usersListTable" class="divide-y divide-slate-100"></tbody></table>
+                    </div>
+                </div>
+
+                <!-- จัดการประเภทบทลงโทษ -->
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col">
+                    <h3 class="text-xl font-bold text-navy mb-4 border-b border-slate-100 pb-3">ตั้งค่าประเภทตัวเลือกบทลงโทษ</h3>
+                    <div class="flex gap-3 mb-5">
+                        <input type="text" id="new_penalty_type_name" placeholder="เช่น ฝากขัง..." class="flex-grow border border-slate-300 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2">
+                        <button onclick="addPenaltyType()" class="bg-rose-600 text-white px-6 rounded-lg font-bold text-sm"><i class="fa-solid fa-plus mr-1"></i> เพิ่ม</button>
+                    </div>
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl flex-grow">
+                        <table class="w-full text-left text-sm"><thead class="bg-slate-100 text-slate-600"><tr><th class="p-3">ชื่อประเภท</th><th class="p-3 text-right w-20">จัดการ</th></tr></thead><tbody id="penaltyTypesTable" class="divide-y divide-slate-100"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Logs -->
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-5">
+                    <h3 class="text-xl font-bold text-navy"><i class="fa-solid fa-list-check mr-2"></i> Audit Logs</h3>
+                    <button onclick="loadAuditLogs()" class="bg-slate-100 text-navy px-4 py-2 rounded-lg text-xs font-bold shadow-sm"><i class="fa-solid fa-rotate-right"></i></button>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl max-h-80">
+                    <table class="w-full text-left text-xs min-w-[800px]"><thead class="bg-slate-100 sticky top-0"><tr><th class="p-3 w-36">วันที่/เวลา</th><th class="p-3 w-48">Admin ID</th><th class="p-3">รายละเอียด</th></tr></thead><tbody id="auditListTable" class="divide-y divide-slate-100"></tbody></table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- PROFILE MODAL -->
+<div id="profileModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[100] px-4">
+    <div class="bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+        <div class="bg-navy px-6 py-4 flex justify-between items-center border-b border-gold"><h3 class="font-bold text-white text-lg"><i class="fa-solid fa-id-card text-gold mr-2"></i> แฟ้มประวัติ</h3><button onclick="document.getElementById('profileModal').classList.replace('flex', 'hidden')" class="text-slate-300 hover:text-rose-400"><i class="fa-solid fa-xmark text-2xl"></i></button></div>
+        <div class="p-6 overflow-y-auto custom-scrollbar flex-grow bg-slate-50">
+            <div id="profileLoading" class="text-center py-10"><i class="fa-solid fa-spinner fa-spin text-4xl text-navy"></i></div>
+            <div id="profileContent" class="hidden space-y-6">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="grid grid-cols-2 gap-4 text-sm" id="displayProfileView">
+                        <div><span class="text-slate-500">รหัส:</span> <span id="p_id" class="font-bold"></span></div>
+                        <div><span class="text-slate-500">รุ่น:</span> <span id="p_gen" class="font-bold"></span></div>
+                        <div class="col-span-2"><span class="text-slate-500">ชื่อ:</span> <span id="p_name" class="font-bold text-base"></span></div>
+                        <div class="col-span-2"><span class="text-slate-500">ใบเหลือง:</span> <span id="p_status" class="font-bold"></span></div>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h4 class="font-bold text-rose-600 border-b border-slate-100 pb-2 mb-4">ประวัติการลงโทษ</h4>
+                    <div id="p_penalties" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- RULE MODAL -->
+<div id="ruleModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[100] px-4">
+    <div class="bg-white rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl">
+        <div class="bg-navy px-6 py-4 flex justify-between items-center"><h3 class="font-bold text-white text-lg" id="ruleModalTitle">เพิ่มบทลงโทษ</h3><button onclick="document.getElementById('ruleModal').classList.replace('flex', 'hidden')" class="text-slate-300 hover:text-rose-400"><i class="fa-solid fa-xmark text-2xl"></i></button></div>
+        <form id="ruleForm" onsubmit="submitRule(event)" class="p-6 space-y-4">
+            <input type="hidden" id="rule_id">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="col-span-1 md:col-span-2"><label class="block font-bold text-sm mb-1">หมวดหมู่ *</label><input type="text" id="rule_category" required class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5"></div>
+                <div class="col-span-1 md:col-span-2"><label class="block font-bold text-sm mb-1">ความผิด *</label><input type="text" id="rule_name" required class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5"></div>
+                <div class="col-span-1 md:col-span-2"><label class="block font-bold text-sm mb-1">รายละเอียด</label><textarea id="rule_desc" class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5" rows="4"></textarea></div>
+                <div><label class="block font-bold text-sm mb-1">ค่าปรับ</label><input type="text" id="rule_fine" required class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5"></div>
+                <div><label class="block font-bold text-sm mb-1">จำคุก</label><input type="text" id="rule_jail" required class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5"></div>
+            </div>
+            <div class="flex justify-end pt-4"><button type="submit" class="bg-navy text-gold font-bold px-6 py-2.5 rounded-lg">บันทึกข้อมูล</button></div>
+        </form>
+    </div>
+</div>
+
+<!-- Scripts (ทำงานร่วมกับ Vercel) -->
+<script>
+    let currentUser = null;
+
+    window.onload = () => {
+        document.getElementById('main-content').style.display = 'block';
+        
+        // เช็คว่ามี URL Parameter ของ Discord Code หรือ Police ID มาไหม
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const pid = urlParams.get('pid');
+
+        if (code || pid) {
+            Swal.fire({ title: 'กำลังยืนยันตัวตน...', didOpen: () => Swal.showLoading() });
+            
+            // ลบ Params ออกจาก URL เพื่อความสะอาด
+            const cleanUrl = window.location.origin + window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+
+            let action = code ? 'verifyDiscord' : 'verifyPoliceId';
+            let payload = code ? { code: code, redirectUri: cleanUrl } : { pid: pid };
+
+            apiCall(action, payload)
+                .then(user => {
+                    if (user && user.isAuthorized) {
+                        localStorage.setItem('oig_user', JSON.stringify(user));
+                        location.reload(); // รีโหลดเพื่อให้สคริปต์เซ็ตค่าใหม่
+                    } else {
+                        Swal.fire('ข้อผิดพลาด', 'คุณไม่มีสิทธิ์เข้าถึง หรือรหัสผ่านไม่ถูกต้อง', 'error');
+                        showView('view-denied');
+                    }
+                })
+                .catch(err => {
+                    Swal.fire('ข้อผิดพลาด', err.message, 'error');
+                    showView('view-login');
+                });
+        } else {
+            // โหลดผู้ใช้จาก Local Storage
+            const savedUser = localStorage.getItem('oig_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                renderAuthUI();
+                switchTab('home');
+                loadPenaltyTypes();
+            } else {
+                showView('view-login');
+            }
+        }
+    };
+
+    function renderAuthUI() {
+        if (currentUser && currentUser.isAuthorized) {
+            document.getElementById('nav-menus').classList.remove('hidden');
+            document.getElementById('nav-username').innerText = currentUser.name || "เจ้าหน้าที่";
+            document.getElementById('nav-role').innerText = currentUser.role || "N/A";
+            document.getElementById('nav-avatar').src = currentUser.avatar || "https://ui-avatars.com/api/?name=OIG&background=0B1E36&color=D4AF37";
+            document.getElementById('home_username').innerText = currentUser.name || "เจ้าหน้าที่";
+            
+            if (currentUser.role === 'Owner') document.getElementById('opt-screener').classList.remove('hidden');
+            if (currentUser.role === 'Admin' || currentUser.role === 'Owner') document.getElementById('btn-add-rule').classList.remove('hidden');
+            
+            showView('view-app');
+        } else {
+            showView('view-denied');
+        }
+    }
+
+    function showView(viewId) {
+        ['view-login', 'view-denied', 'view-app'].forEach(v => {
+            document.getElementById(v).classList.add('hidden');
+        });
+        document.getElementById(viewId).classList.remove('hidden');
+    }
+
+    function loginDiscord() {
+        const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
+        window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=identify`;
+    }
+
+    function loginWithPoliceId() {
+        const pid = document.getElementById('login_police_id').value.trim();
+        if (!pid) return Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัสประจำตัว', 'warning');
+        window.location.href = window.location.origin + window.location.pathname + "?pid=" + encodeURIComponent(pid);
+    }
+
+    function logout() {
+        Swal.fire({
+            title: 'ออกจากระบบ?', text: "คุณต้องการออกจากระบบใช่หรือไม่", icon: 'question',
+            showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ออกจากระบบ'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.removeItem('oig_user');
+                location.reload();
+            }
+        });
+    }
+
+    // ==========================================
+    // UI TAB LOGIC
+    // ==========================================
+    function switchTab(tab) {
+        ['tab-home', 'tab-roster', 'tab-add-member', 'tab-penalty', 'tab-roles', 'tab-rulebook'].forEach(t => document.getElementById(t).classList.add('hidden'));
+        ['nav-home', 'nav-roster', 'nav-penalty', 'nav-roles', 'nav-rulebook'].forEach(n => {
+            const el = document.getElementById(n); if(el) el.className = "px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-gold transition";
+        });
+        document.getElementById(`tab-${tab}`).classList.remove('hidden');
+        const tNav = document.getElementById(`nav-${tab}`); if(tNav) tNav.className = "px-3 py-2 rounded-md text-sm font-medium text-gold border-b-2 border-gold transition";
+
+        if(tab === 'roster') { searchRoster(); } 
+        else if (tab === 'roles') { loadRoles(); loadAuditLogs(); loadPenaltyTypes(); } 
+        else if (tab === 'rulebook') { loadRulebook(); }
+    }
+
+    // ==========================================
+    // REST OF APP LOGIC (Converted to apiCall)
+    // ==========================================
+    function searchRoster() {
+        const query = document.getElementById('rosterSearchInput').value.trim();
+        const empFilter = document.getElementById('filterEmployment').value;
+        const discFilter = document.getElementById('filterDiscipline').value;
+        
+        document.getElementById('roster-container').innerHTML = `<div class="text-center py-16"><i class="fa-solid fa-circle-notch fa-spin text-5xl text-gold"></i></div>`;
+        apiCall('getPoliceRoster', { params: { query, empFilter, discFilter } }).then(renderRoster).catch(e => Swal.fire('Error', e.message, 'error'));
+    }
+
+    function renderRoster(data) {
+        const container = document.getElementById('roster-container'); container.innerHTML = '';
+        const generations = Object.keys(data).sort((a, b) => parseInt(a) - parseInt(b));
+        if(generations.length === 0) { container.innerHTML = `<div class="text-center py-10 bg-white rounded-xl border">ไม่พบข้อมูล</div>`; return; }
+
+        generations.forEach(gen => {
+            let html = `<div class="bg-white border border-slate-200 rounded-2xl shadow-sm mb-6 overflow-hidden"><div class="bg-navy px-5 py-3 text-white font-bold">รุ่นที่ ${gen}</div><ul class="divide-y divide-slate-100">`;
+            data[gen].forEach(member => {
+                let badge = '<span class="bg-slate-100 text-slate-500 text-xs px-2 py-0.5 rounded border border-slate-200">ปกติ</span>';
+                if (member.empStatus === 'ปลดราชการ') badge = '<span class="bg-[#4e342e] text-white text-xs px-2 py-0.5 rounded">ปลดราชการ</span>';
+                else if (member.penaltyCount >= 3) badge = `<span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded shadow-sm">ใบแดง (${member.penaltyCount})</span>`;
+                else if (member.penaltyCount == 2) badge = '<span class="bg-orange-500 text-white text-xs px-2 py-0.5 rounded shadow-sm">ใบส้ม (2)</span>';
+                else if (member.penaltyCount == 1) badge = '<span class="bg-yellow-400 text-yellow-900 font-bold text-xs px-2 py-0.5 rounded shadow-sm">ใบเหลือง (1)</span>';
+
+                html += `<li onclick="openProfileModal('${member.policeId}')" class="flex justify-between p-4 hover:bg-slate-50 cursor-pointer"><div><span class="font-bold text-navy">${member.fullName}</span> <span class="ml-2">${badge}</span></div><div class="font-mono text-xs text-slate-400">ID: ${member.policeId}</div></li>`;
+            });
+            html += `</ul></div>`; container.innerHTML += html;
+        });
+    }
+
+    function openProfileModal(policeId) {
+        document.getElementById('profileModal').classList.replace('hidden', 'flex');
+        document.getElementById('profileLoading').classList.remove('hidden');
+        document.getElementById('profileContent').classList.add('hidden');
+        apiCall('getMemberProfile', { policeId }).then(renderProfile).catch(e => Swal.fire('Error', e.message, 'error'));
+    }
+
+    function renderProfile(data) {
+        document.getElementById('profileLoading').classList.add('hidden');
+        document.getElementById('profileContent').classList.remove('hidden');
+        document.getElementById('p_id').innerText = data.info.policeId;
+        document.getElementById('p_gen').innerText = data.info.gen;
+        document.getElementById('p_name').innerText = data.info.fullName;
+        document.getElementById('p_status').innerText = `${data.info.penaltyCount} ใบเหลือง`;
+        
+        const pDiv = document.getElementById('p_penalties'); pDiv.innerHTML = '';
+        if(data.penalties.length === 0) pDiv.innerHTML = '<p class="text-xs text-slate-400 italic">ไม่มีข้อมูลพฤติการณ์</p>';
+        data.penalties.forEach(p => { 
+            pDiv.innerHTML += `<div class="border border-rose-200 rounded-lg p-3 text-sm bg-rose-50 mb-2"><div class="font-bold text-rose-700">${p.action} <span class="text-xs font-normal opacity-70 ml-2">(${p.startDate} - ${p.expiryDate})</span></div><div class="text-slate-600 mt-1">${p.reason}</div><div class="mt-2 text-xs"><a href="${p.imageUrl}" target="_blank" class="text-blue-600 underline">ดูหลักฐาน</a></div></div>`; 
+        });
+    }
+
+    function loadPenaltyTypes() {
+        apiCall('getPenaltyTypes').then(r => {
+            const t = document.getElementById('penaltyTypesTable'); if(t) t.innerHTML = '';
+            const sel = document.getElementById('pen_action_type'); if(sel) sel.innerHTML = '<option value="" disabled selected>กรุณาเลือก...</option>';
+            r.forEach(p => {
+                if(t) t.innerHTML += `<tr><td class="p-3 font-bold text-navy">${p.name}</td><td class="p-3 text-right"><button onclick="deletePenaltyType('${p.id}')" class="text-rose-600"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
+                if(sel) sel.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+            });
+        }).catch(e => console.error(e));
+    }
+    
+    function addPenaltyType() {
+        const name = document.getElementById('new_penalty_type_name').value.trim();
+        if(!name) return; Swal.fire({ title: 'บันทึก...', didOpen: () => Swal.showLoading() });
+        apiCall('savePenaltyType', { name, updaterId: currentUser.id }).then(() => { Swal.fire('สำเร็จ', '', 'success'); document.getElementById('new_penalty_type_name').value=''; loadPenaltyTypes(); }).catch(e => Swal.fire('Error', e.message, 'error'));
+    }
+
+    function deletePenaltyType(id) {
+        apiCall('deletePenaltyType', { id, updaterId: currentUser.id }).then(loadPenaltyTypes).catch(e => Swal.fire('Error', e.message, 'error'));
+    }
+
+    let globalRuleData = [];
+    function loadRulebook() {
+        apiCall('getPenaltyCatalog').then(data => {
+            globalRuleData = data;
+            const tbody = document.getElementById('rulebook-container'); tbody.innerHTML = '';
+            data.forEach(r => {
+                let actions = '';
+                if (currentUser.role === 'Admin' || currentUser.role === 'Owner') {
+                    actions = `<button onclick="editRule('${r.id}')" class="text-blue-600 p-2"><i class="fa-solid fa-pen"></i></button><button onclick="deleteRule('${r.id}')" class="text-rose-600 p-2"><i class="fa-solid fa-trash-can"></i></button>`;
+                }
+                tbody.innerHTML += `<tr><td class="p-4 align-top font-bold">${r.category}</td><td class="p-4 align-top">${r.name}</td><td class="p-4 align-top whitespace-pre-wrap text-xs">${r.description||'-'}</td><td class="p-4 align-top text-right text-emerald-600 font-bold">${r.fine}</td><td class="p-4 align-top text-right text-rose-600 font-bold">${r.jail}</td><td class="p-4 align-top text-center">${actions}</td></tr>`;
+            });
+        });
+    }
+
+    function togglePenaltyDurationInput() { 
+        const type = document.getElementById('pen_type').value;
+        document.getElementById('pen_month_container').classList.toggle('hidden', type !== 'ระบุเดือน');
+        document.getElementById('pen_date_container').classList.toggle('hidden', type !== 'ระบุวัน');
+    }
+
+    function submitPenalty(e) {
+        e.preventDefault(); const f = document.getElementById('pen_file').files[0]; if(!f) return;
+        Swal.fire({ title: 'กำลังอัปโหลด...', didOpen: () => Swal.showLoading() });
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const formData = { policeId: document.getElementById('pen_police_id').value, actionType: document.getElementById('pen_action_type').value, reason: document.getElementById('pen_reason').value, type: document.getElementById('pen_type').value, months: document.getElementById('pen_months').value, startDate: document.getElementById('pen_start_date').value, endDate: document.getElementById('pen_end_date').value, base64Image: ev.target.result.split(',')[1], mimeType: f.type, fileName: f.name, punisherId: currentUser.id };
+            apiCall('addPenalty', { formData }).then(() => { Swal.fire('สำเร็จ', 'ลงโทษเรียบร้อย', 'success'); document.getElementById('penaltyForm').reset(); switchTab('roster'); }).catch(e => Swal.fire('Error', e.message, 'error'));
+        }; reader.readAsDataURL(f);
+    }
+
+    function addMemberRow() { const c = document.getElementById('member-rows-container'); const newRow = c.querySelector('.member-row').cloneNode(true); newRow.querySelector('input[name="policeId"]').value = ''; newRow.querySelector('input[name="fullName"]').value = ''; newRow.querySelector('.remove-btn').classList.remove('hidden'); c.appendChild(newRow); }
+    function removeMemberRow(btn) { if(document.querySelectorAll('.member-row').length > 1) btn.closest('.member-row').remove(); }
+    
+    function submitNewMembers(e) {
+        e.preventDefault(); const rows = document.querySelectorAll('.member-row'); const membersData = [];
+        rows.forEach(r => membersData.push({ gen: r.querySelector('input[name="gen"]').value, policeId: r.querySelector('input[name="policeId"]').value, fullName: r.querySelector('input[name="fullName"]').value }));
+        Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
+        apiCall('addNewMembers', { data: membersData }).then(() => { Swal.fire('สำเร็จ', '', 'success'); document.getElementById('addMemberForm').reset(); switchTab('roster'); }).catch(e => Swal.fire('Error', e.message, 'error'));
+    }
+
+    function loadRoles() { apiCall('getUsersList').then(r => { const t = document.getElementById('usersListTable'); t.innerHTML=''; r.forEach(u => t.innerHTML += `<tr><td class="p-3">${u.discordId}</td><td class="p-3 font-bold">${u.name}</td><td class="p-3 font-bold">${u.role}</td></tr>`); }); }
+    function loadAuditLogs() { apiCall('getAuditLogs').then(r => { const t = document.getElementById('auditListTable'); t.innerHTML=''; r.forEach(l => t.innerHTML += `<tr><td class="p-3">${l.date}</td><td class="p-3 font-mono">${l.admin}</td><td class="p-3">${l.details}</td></tr>`); }); }
+    
+    function updateRole() {
+        const targetId = document.getElementById('role_discord_id').value; const newRole = document.getElementById('role_select').value;
+        if(!targetId) return; Swal.fire({ title: 'กำลังดำเนินการ...', didOpen: () => Swal.showLoading() });
+        apiCall('updateUserRole', { targetId, newRole, requesterRole: currentUser.role, requesterId: currentUser.id }).then(() => { Swal.fire('สำเร็จ', '', 'success'); loadRoles(); }).catch(e => Swal.fire('Error', e.message, 'error'));
+    }
+
+    function openRuleModal() { document.getElementById('ruleForm').reset(); document.getElementById('rule_id').value = ''; document.getElementById('ruleModal').classList.replace('hidden', 'flex'); }
+    function closeRuleModal() { document.getElementById('ruleModal').classList.replace('flex', 'hidden'); }
+    function editRule(id) { const r = globalRuleData.find(x => x.id === id); if(!r) return; document.getElementById('rule_id').value = r.id; document.getElementById('rule_category').value = r.category; document.getElementById('rule_name').value = r.name; document.getElementById('rule_desc').value = r.description; document.getElementById('rule_fine').value = r.fine; document.getElementById('rule_jail').value = r.jail; document.getElementById('ruleModal').classList.replace('hidden', 'flex'); }
+    function deleteRule(id) { Swal.fire({ title: 'ลบ?', showCancelButton: true }).then(r => { if(r.isConfirmed) { apiCall('deletePenaltyRule', { id, updaterId: currentUser.id, updaterRole: currentUser.role }).then(loadRulebook); }}); }
+    function submitRule(e) { e.preventDefault(); const data = { id: document.getElementById('rule_id').value, name: document.getElementById('rule_name').value, category: document.getElementById('rule_category').value, description: document.getElementById('rule_desc').value, fine: document.getElementById('rule_fine').value, jail: document.getElementById('rule_jail').value }; apiCall('savePenaltyRule', { data, updaterId: currentUser.id, updaterRole: currentUser.role }).then(() => { closeRuleModal(); loadRulebook(); }); }
+</script>
+</body>
+</html>
