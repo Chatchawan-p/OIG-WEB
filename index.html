@@ -34,21 +34,23 @@
     // ฟังก์ชันเชื่อมต่อกับ Google Apps Script (Backend API)
     async function apiCall(action, payload = {}) {
         try {
+            // แปลงข้อมูลที่จะส่งให้อยู่ในรูป Form Data เพื่อป้องกัน Google Redirect เป็น GET
+            const bodyData = new URLSearchParams();
+            bodyData.append('requestData', JSON.stringify({ action: action, ...payload }));
+
             const response = await fetch(API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                redirect: "follow",
-                body: JSON.stringify({ action: action, ...payload })
+                body: bodyData
             });
-            
+
             const rawText = await response.text();
-            
-            // เช็คว่าถ้าข้อมูลที่ตอบกลับมาขึ้นต้นด้วย < แสดงว่าเป็นหน้าเว็บ HTML ข้อผิดพลาดจาก Google
+
+            // เช็คว่าถ้าตอบกลับเป็น HTML ให้แจ้งเตือนสิทธิ์
             if (rawText.trim().startsWith('<')) {
                 console.error("Received HTML instead of JSON:", rawText);
-                throw new Error("ระบบตอบกลับเป็น HTML (คาดว่าสิทธิ์ Google Apps Script หลุด หรือใส่ URL API ผิดพลาด)");
+                throw new Error("สิทธิ์การเข้าถึง Google Apps Script หลุด กรุณาเช็คการแชร์เป็น 'ทุกคน'");
             }
-            
+
             const result = JSON.parse(rawText);
             if (result.status === 'success') return result.data;
             throw new Error(result.message);
