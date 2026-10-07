@@ -62,7 +62,7 @@
             </div>
 
             <!-- สถานะยังไม่ได้ล็อกอิน -->
-            <div id="nav-unauth" class="hidden lg:flex items-center space-x-2">
+            <div id="nav-unauth" class="hidden items-center space-x-2">
                 <span class="px-3 py-2 rounded-md text-sm font-medium text-gold border-b-2 border-gold">เข้าสู่ระบบ</span>
             </div>
 
@@ -436,17 +436,35 @@
             } else {
                 showView('view-login');
                 // ซ่อนเมนูทั้งหมดถ้ายังไม่ได้ล็อกอิน
-                document.getElementById('nav-unauth').classList.remove('hidden');
-                document.getElementById('nav-auth').classList.add('hidden');
+                const unauthNav = document.getElementById('nav-unauth');
+                if (unauthNav) {
+                    unauthNav.classList.remove('hidden');
+                    unauthNav.style.display = 'flex';
+                }
+                const authNav = document.getElementById('nav-auth');
+                if (authNav) {
+                    authNav.classList.add('hidden');
+                    authNav.style.display = 'none';
+                }
             }
         }
     };
 
     function renderAuthUI() {
         if (currentUser && currentUser.isAuthorized) {
-            document.getElementById('nav-unauth').classList.add('hidden');
-            document.getElementById('nav-auth').classList.remove('hidden');
-            document.getElementById('nav-auth').classList.add('flex'); // แก้จุดที่ทำให้เมนูโผล่
+            // ซ่อนปุ่ม "เข้าสู่ระบบ" ฝั่งซ้าย/กลาง ออกชัวร์ๆ 100%
+            const unauthNav = document.getElementById('nav-unauth');
+            if (unauthNav) {
+                unauthNav.classList.add('hidden');
+                unauthNav.style.display = 'none';
+            }
+            
+            // แสดงชุดเมนูของผู้ใช้ที่ล็อกอินแล้ว
+            const authNav = document.getElementById('nav-auth');
+            if (authNav) {
+                authNav.classList.remove('hidden');
+                authNav.style.display = 'flex';
+            }
             
             document.getElementById('nav-username').innerText = currentUser.name || "เจ้าหน้าที่";
             document.getElementById('nav-role').innerText = currentUser.role || "N/A";
