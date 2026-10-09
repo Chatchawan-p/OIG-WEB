@@ -105,6 +105,26 @@ func (s *Store) UpdateUserRoleWithAudit(_ context.Context, userID string, role m
 	return user, nil
 }
 
+func (s *Store) UpdateUserDiscordIDWithAudit(_ context.Context, userID, newDiscordID string, now time.Time, audit model.AuditLog) (model.User, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	user, ok := s.Users[userID]
+	if !ok {
+		return model.User{}, apperror.ErrNotFound
+	}
+	for _, existing := range s.Users {
+		if existing.UserID != userID && existing.DiscordID == newDiscordID {
+			return model.User{}, apperror.ErrConflict
+		}
+	}
+	user.DiscordID = newDiscordID
+	user.UpdatedAt = now
+	user.TokenVersion++
+	s.Users[userID] = user
+	s.Audits = append(s.Audits, audit)
+	return user, nil
+}
+
 func (s *Store) IncrementTokenVersion(_ context.Context, userID string, now time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -86,6 +86,19 @@ func (s *Store) UpdateUserRoleWithAudit(ctx context.Context, userID string, role
 	return updated, err
 }
 
+func (s *Store) UpdateUserDiscordIDWithAudit(ctx context.Context, userID, newDiscordID string, now time.Time, audit model.AuditLog) (model.User, error) {
+	var updated model.User
+	err := s.db.WithTransaction(ctx, func(tx context.Context) error {
+		err := s.users().FindOneAndUpdate(tx, bson.M{"user_id": userID}, bson.M{"$set": bson.M{"discord_id": newDiscordID, "updated_at": now}, "$inc": bson.M{"token_version": 1}}, options.FindOneAndUpdate().SetReturnDocument(options.After)).Decode(&updated)
+		if err != nil {
+			return mapError(err)
+		}
+		_, err = s.audits().InsertOne(tx, audit)
+		return mapError(err)
+	})
+	return updated, err
+}
+
 func (s *Store) IncrementTokenVersion(ctx context.Context, userID string, now time.Time) error {
 	result, err := s.users().UpdateOne(ctx, bson.M{"user_id": userID}, bson.M{"$inc": bson.M{"token_version": 1}, "$set": bson.M{"updated_at": now}})
 	if err != nil {

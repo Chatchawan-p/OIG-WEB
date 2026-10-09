@@ -13,7 +13,7 @@ import (
 
 func TestBootstrapFirstAdmin_Success(t *testing.T) {
 	store := memory.New()
-	svc := NewBootstrapService(store, "development", fixedTime)
+	svc := NewBootstrapService(store, store, "development", fixedTime)
 
 	cmd := BootstrapCommand{
 		DiscordID:   "123456789012345678",
@@ -76,7 +76,7 @@ func TestBootstrapFirstAdmin_Success(t *testing.T) {
 
 func TestBootstrapFirstAdmin_DefaultRoleIsOwner(t *testing.T) {
 	store := memory.New()
-	svc := NewBootstrapService(store, "development", fixedTime)
+	svc := NewBootstrapService(store, store, "development", fixedTime)
 
 	cmd := BootstrapCommand{
 		DiscordID:   "123456789012345678",
@@ -100,7 +100,7 @@ func TestBootstrapFirstAdmin_EnvironmentRestrictions(t *testing.T) {
 	for _, env := range disallowedEnvs {
 		t.Run("env_"+env, func(t *testing.T) {
 			store := memory.New()
-			svc := NewBootstrapService(store, env, fixedTime)
+			svc := NewBootstrapService(store, store, env, fixedTime)
 
 			cmd := BootstrapCommand{
 				DiscordID:   "123456789012345678",
@@ -128,7 +128,7 @@ func TestBootstrapFirstAdmin_EnvironmentRestrictions(t *testing.T) {
 
 func TestBootstrapFirstAdmin_ExplicitConfirmationRequired(t *testing.T) {
 	store := memory.New()
-	svc := NewBootstrapService(store, "development", fixedTime)
+	svc := NewBootstrapService(store, store, "development", fixedTime)
 
 	cmd := BootstrapCommand{
 		DiscordID:   "123456789012345678",
@@ -170,7 +170,7 @@ func TestBootstrapFirstAdmin_Validation(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			store := memory.New()
-			svc := NewBootstrapService(store, "development", fixedTime)
+			svc := NewBootstrapService(store, store, "development", fixedTime)
 
 			cmd := BootstrapCommand{
 				DiscordID:   tc.discordID,
@@ -220,7 +220,7 @@ func TestBootstrapFirstAdmin_PreventsExecutionWhenAdminAlreadyExists(t *testing.
 				Role:        tc.existingRole,
 			})
 
-			svc := NewBootstrapService(store, "development", fixedTime)
+			svc := NewBootstrapService(store, store, "development", fixedTime)
 			cmd := BootstrapCommand{
 				DiscordID:   "123456789012345678",
 				DisplayName: "New Admin",
@@ -252,7 +252,7 @@ func TestBootstrapFirstAdmin_PreventsDuplicateDiscordID(t *testing.T) {
 		Role:        model.RoleGuest,
 	})
 
-	svc := NewBootstrapService(store, "development", fixedTime)
+	svc := NewBootstrapService(store, store, "development", fixedTime)
 	cmd := BootstrapCommand{
 		DiscordID:   "123456789012345678",
 		DisplayName: "New Owner",
@@ -269,5 +269,175 @@ func TestBootstrapFirstAdmin_PreventsDuplicateDiscordID(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "already exists") {
 		t.Errorf("expected error to mention 'already exists', got %q", err.Error())
+	}
+}
+
+func TestCorrectOwnerDiscordID_Success(t *testing.T) {
+	store := memory.New()
+	owner := model.User{
+		UserID:       "usr_40e09880c4230d5b7cde65a065c50db3",
+		DiscordID:    "1557194126611579030", // App ID
+		DisplayName:  "Original Owner",
+		Role:         model.RoleOwner,
+		TokenVersion: 1,
+		CreatedAt:    fixedTime(),
+		UpdatedAt:    fixedTime(),
+	}
+	store.SeedUsers(owner)
+
+	svc := NewBootstrapService(store, store, "development", fixedTime)
+	cmd := CorrectOwnerDiscordIDCommand{
+		UserID:       owner.UserID,
+		NewDiscordID: "987654321098765432", // Human user ID
+		Confirm:      true,
+	}
+
+	updated, err := svc.CorrectOwnerDiscordID(context.Background(), cmd)
+	if err != nil {
+		t.Fatalf("CorrectOwnerDiscordID() unexpected error = %v", err)
+	}
+
+	if updated.UserID != owner.UserID {
+		t.Errorf("expected UserID preserved %q, got %q", owner.UserID, updated.UserID)
+	}
+	if updated.DiscordID != cmd.NewDiscordID {
+		t.Errorf("expected updated DiscordID %q, got %q", cmd.NewDiscordID, updated.DiscordID)
+	}
+	if updated.DisplayName != owner.DisplayName {
+		t.Errorf("expected DisplayName preserved %q, got %q", owner.DisplayName, updated.DisplayName)
+	}
+	if updated.Role != model.RoleOwner {
+		t.Errorf("expected Role preserved %q, got %q", model.RoleOwner, updated.Role)
+	}
+	if updated.TokenVersion != 2 {
+		t.Errorf("expected TokenVersion incremented to 2, got %d", updated.TokenVersion)
+	}
+
+	// Verify persistence in store
+	saved, err := store.FindUserByID(context.Background(), owner.UserID)
+	if err != nil {
+		t.Fatalf("user not found in store: %v", err)
+	}
+	if saved.DiscordID != cmd.NewDiscordID {
+		t.Errorf("saved DiscordID mismatch: %q", saved.DiscordID)
+	}
+
+	// Verify audit log
+	if len(store.Audits) != 1 {
+		t.Fatalf("expected 1 audit log, got %d", len(store.Audits))
+	}
+	audit := store.Audits[0]
+	if audit.Action != "user.discord_identity_corrected" {
+		t.Errorf("expected audit action 'user.discord_identity_corrected', got %q", audit.Action)
+	}
+	if audit.ResourceID != owner.UserID {
+		t.Errorf("expected audit ResourceID %q, got %q", owner.UserID, audit.ResourceID)
+	}
+	if !strings.Contains(audit.Description, owner.DiscordID) || !strings.Contains(audit.Description, cmd.NewDiscordID) {
+		t.Errorf("expected audit description to mention old and new Discord IDs, got %q", audit.Description)
+	}
+}
+
+func TestCorrectOwnerDiscordID_OmittedUserIDResolvesSingleOwner(t *testing.T) {
+	store := memory.New()
+	owner := model.User{
+		UserID:       "usr_single_owner",
+		DiscordID:    "111111111111111111",
+		DisplayName:  "Single Owner",
+		Role:         model.RoleOwner,
+		TokenVersion: 1,
+	}
+	store.SeedUsers(owner)
+
+	svc := NewBootstrapService(store, store, "development", fixedTime)
+	cmd := CorrectOwnerDiscordIDCommand{
+		UserID:       "", // omitted, auto-resolve single owner
+		NewDiscordID: "222222222222222222",
+		Confirm:      true,
+	}
+
+	updated, err := svc.CorrectOwnerDiscordID(context.Background(), cmd)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if updated.UserID != owner.UserID {
+		t.Errorf("expected resolved user %q, got %q", owner.UserID, updated.UserID)
+	}
+}
+
+func TestCorrectOwnerDiscordID_EnvironmentAndConfirmationChecks(t *testing.T) {
+	store := memory.New()
+	owner := model.User{UserID: "usr_owner", Role: model.RoleOwner, DiscordID: "111111111111111111"}
+	store.SeedUsers(owner)
+
+	// Production blocked
+	svcProd := NewBootstrapService(store, store, "production", fixedTime)
+	_, err := svcProd.CorrectOwnerDiscordID(context.Background(), CorrectOwnerDiscordIDCommand{
+		UserID:       owner.UserID,
+		NewDiscordID: "222222222222222222",
+		Confirm:      true,
+	})
+	if !errors.Is(err, apperror.ErrForbidden) {
+		t.Errorf("expected ErrForbidden for production, got %v", err)
+	}
+
+	// Missing confirm blocked
+	svcDev := NewBootstrapService(store, store, "development", fixedTime)
+	_, err = svcDev.CorrectOwnerDiscordID(context.Background(), CorrectOwnerDiscordIDCommand{
+		UserID:       owner.UserID,
+		NewDiscordID: "222222222222222222",
+		Confirm:      false,
+	})
+	if !errors.Is(err, apperror.ErrInvalid) {
+		t.Errorf("expected ErrInvalid for missing confirm, got %v", err)
+	}
+}
+
+func TestCorrectOwnerDiscordID_OnlyAppliesToOwner(t *testing.T) {
+	store := memory.New()
+	admin := model.User{UserID: "usr_admin", Role: model.RoleAdmin, DiscordID: "111111111111111111"}
+	store.SeedUsers(admin)
+
+	svc := NewBootstrapService(store, store, "development", fixedTime)
+	_, err := svc.CorrectOwnerDiscordID(context.Background(), CorrectOwnerDiscordIDCommand{
+		UserID:       admin.UserID,
+		NewDiscordID: "222222222222222222",
+		Confirm:      true,
+	})
+	if !errors.Is(err, apperror.ErrForbidden) {
+		t.Errorf("expected ErrForbidden when target is Admin, got %v", err)
+	}
+}
+
+func TestCorrectOwnerDiscordID_PreventsDuplicate(t *testing.T) {
+	store := memory.New()
+	owner := model.User{UserID: "usr_owner", Role: model.RoleOwner, DiscordID: "111111111111111111"}
+	guest := model.User{UserID: "usr_guest", Role: model.RoleGuest, DiscordID: "222222222222222222"}
+	store.SeedUsers(owner, guest)
+
+	svc := NewBootstrapService(store, store, "development", fixedTime)
+	_, err := svc.CorrectOwnerDiscordID(context.Background(), CorrectOwnerDiscordIDCommand{
+		UserID:       owner.UserID,
+		NewDiscordID: guest.DiscordID, // Duplicate
+		Confirm:      true,
+	})
+	if !errors.Is(err, apperror.ErrConflict) {
+		t.Errorf("expected ErrConflict for duplicate Discord ID, got %v", err)
+	}
+}
+
+func TestInspectAdministrators(t *testing.T) {
+	store := memory.New()
+	owner := model.User{UserID: "usr_owner", Role: model.RoleOwner, DiscordID: "111111111111111111"}
+	store.SeedUsers(owner)
+	store.Audits = append(store.Audits, model.AuditLog{AuditID: "aud_1", Action: "user.bootstrap_admin"})
+
+	svc := NewBootstrapService(store, store, "development", fixedTime)
+	users, audits, err := svc.InspectAdministrators(context.Background())
+	if err != nil {
+		t.Fatalf("InspectAdministrators() error = %v", err)
+	}
+	if len(users) != 1 || len(audits) != 1 {
+		t.Errorf("expected 1 user and 1 audit, got %d users and %d audits", len(users), len(audits))
 	}
 }

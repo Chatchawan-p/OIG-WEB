@@ -30,6 +30,7 @@ type UserRepository interface {
 	FindUserByDiscordID(context.Context, string) (model.User, error)
 	ListUsers(context.Context, Page) ([]model.User, int64, error)
 	UpdateUserRoleWithAudit(context.Context, string, model.Role, time.Time, model.AuditLog) (model.User, error)
+	UpdateUserDiscordIDWithAudit(context.Context, string, string, time.Time, model.AuditLog) (model.User, error)
 	IncrementTokenVersion(context.Context, string, time.Time) error
 	CreateUserWithAudit(context.Context, model.User, model.AuditLog) error
 	CountUsersByRoles(context.Context, ...model.Role) (int64, error)
