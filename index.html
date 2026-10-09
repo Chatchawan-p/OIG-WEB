@@ -3,16 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OFFICE OF INSPECTOR GENERAL</title>
+    <title>OFFICE OF INSPECTOR GENERAL PRACHARUK CITY</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/825/825501.png" type="image/png">
     
     <script>
-        tailwind.config = { theme: { extend: { colors: { navy: { DEFAULT: '#0B1E36', light: '#173154' }, gold: { DEFAULT: '#D4AF37', light: '#F3E5AB' } }, fontFamily: { sans: ['Prompt', 'sans-serif'] } } } }
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: { DEFAULT: '#0B1E36', light: '#173154' },
+                        gold: { DEFAULT: '#D4AF37', light: '#F3E5AB' }
+                    },
+                    fontFamily: { sans: ['Prompt', 'sans-serif'] }
+                }
+            }
+        }
     </script>
     <style>
         body { font-family: 'Prompt', sans-serif; }
@@ -24,62 +38,20 @@
 </head>
 <body class="flex flex-col min-h-screen">
 
-<script>
-    // ==========================================
-    // CONFIGURATION (ตั้งค่า API ของ Vercel)
-    // ==========================================
-    const API_URL = "https://script.google.com/macros/s/AKfycbz-vIN6uF8D_m99RwkCzDNxyN_Ne1K0yOaEw9s7WG7cxfkS-5_6Q9Ff2c7gGK0LbdBi/exec";
-    const DISCORD_CLIENT_ID = "1557194126611579030";
-
-    // ฟังก์ชันเชื่อมต่อกับ Google Apps Script (Backend API)
-    async function apiCall(action, payload = {}) {
-        try {
-            // แปลงข้อมูลที่จะส่งให้อยู่ในรูป Form Data เพื่อป้องกัน Google Redirect เป็น GET
-            const bodyData = new URLSearchParams();
-            bodyData.append('requestData', JSON.stringify({ action: action, ...payload }));
-
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                body: bodyData
-            });
-
-            const rawText = await response.text();
-
-            // เช็คว่าถ้าตอบกลับเป็น HTML ให้แจ้งเตือนสิทธิ์
-            if (rawText.trim().startsWith('<')) {
-                console.error("Received HTML instead of JSON:", rawText);
-                throw new Error("สิทธิ์การเข้าถึง Google Apps Script หลุด กรุณาเช็คการแชร์เป็น 'ทุกคน'");
-            }
-
-            const result = JSON.parse(rawText);
-            if (result.status === 'success') return result.data;
-            throw new Error(result.message);
-        } catch (error) {
-            console.error("API Error:", error);
-            throw error;
-        }
-    }
-</script>
-
 <!-- NAVIGATION BAR -->
 <nav class="bg-navy border-b border-gold shadow-lg sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-20">
-            <div class="flex items-center space-x-3">
-                <img src="https://media.discordapp.net/attachments/886979097023103066/886979184004583434/OIG.png?ex=6ac654bc&is=6ac5033c&hm=a7700997efa4e6e067edc9eb234d81740bfe8565e22589aa44180c35dceee417&=&format=webp&quality=lossless" alt="OIG Logo" class="w-14 h-14 object-contain drop-shadow-md">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('home')">
+                <img src="https://lh3.googleusercontent.com/d/1icVj5_vxhEKeEU_KH0qtZdwV7DU_Gl59=s1000" alt="OIG Logo" class="w-14 h-14 object-contain drop-shadow-md hover:scale-105 transition-transform duration-300">
                 <div class="flex flex-col">
                     <span class="text-white text-base sm:text-lg font-bold">สำนักงานจเรตำรวจประชารักษ์ซิตี้</span>
                     <span class="text-gold text-xs sm:text-sm font-medium uppercase">Office of Inspector General</span>
                 </div>
             </div>
 
-            <!-- สถานะยังไม่ได้ล็อกอิน -->
-            <div id="nav-unauth" class="hidden items-center space-x-2">
-                <span class="px-3 py-2 rounded-md text-sm font-medium text-gold border-b-2 border-gold">เข้าสู่ระบบ</span>
-            </div>
-
-            <!-- สถานะล็อกอินแล้ว -->
-            <div id="nav-auth" class="hidden items-center space-x-2">
+            <!-- Authenticated Nav Buttons -->
+            <div id="nav-authenticated" class="hidden lg:flex items-center space-x-2">
                 <button onclick="switchTab('home')" id="nav-home" class="px-3 py-2 rounded-md text-sm font-medium text-gold border-b-2 border-gold transition">หน้าหลัก</button>
                 <button onclick="switchTab('roster')" id="nav-roster" class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-gold transition">รายชื่อสมาชิก</button>
                 <button onclick="switchTab('rulebook')" id="nav-rulebook" class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-gold transition">บทลงโทษ</button>
@@ -87,102 +59,133 @@
                 <button onclick="switchTab('roles')" id="nav-roles" class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-gold transition">ตั้งค่าระบบ</button>
                 
                 <div class="flex items-center space-x-3 bg-navy-light px-4 py-1.5 rounded-full border border-gold/40 ml-4 shadow-sm">
-                    <img id="nav-avatar" src="https://placehold.co/100x100?text=OIG" class="h-8 w-8 rounded-full border border-gold object-cover">
+                    <img id="nav-user-avatar" src="https://placehold.co/100x100?text=User" class="h-8 w-8 rounded-full border border-gold object-cover" onerror="this.src='https://placehold.co/100x100?text=User'">
                     <div class="flex flex-col text-left">
-                        <span id="nav-username" class="text-white text-xs font-bold leading-tight">...</span>
-                        <span id="nav-role" class="text-gold text-[10px] uppercase font-bold tracking-wider">...</span>
+                        <span id="nav-user-name" class="text-white text-xs font-bold leading-tight">กำลังโหลด...</span>
+                        <span id="nav-user-role" class="text-gold text-[10px] uppercase font-bold tracking-wider">-</span>
                     </div>
-                    <button onclick="logout()" class="ml-2 pl-3 border-l border-gold/30 text-rose-400 hover:text-rose-500 transition" title="ออกจากระบบ">
+                    <button onclick="logout()" class="ml-2 pl-3 border-l border-gold/30 text-rose-400 hover:text-rose-500 transition flex items-center" title="ออกจากระบบ">
                         <i class="fa-solid fa-right-from-bracket text-lg"></i>
                     </button>
                 </div>
+            </div>
+
+            <!-- Unauthenticated Nav -->
+            <div id="nav-unauthenticated" class="flex items-center space-x-2">
+                <button onclick="loginDiscord()" class="px-4 py-2 rounded-xl text-sm font-bold text-white bg-[#5865F2] hover:bg-[#4752C4] shadow-md transition flex items-center">
+                    <i class="fa-brands fa-discord mr-2 text-base"></i> เข้าสู่ระบบ
+                </button>
             </div>
         </div>
     </div>
 </nav>
 
-<main class="flex-grow max-w-5xl mx-auto px-4 w-full py-10" id="main-content" style="display:none;">
+<main class="flex-grow max-w-6xl mx-auto px-4 w-full py-10">
     
     <!-- ============================================== -->
-    <!-- หน้า LOGIN -->
+    <!-- VIEW: UNAUTHENTICATED STATE -->
     <!-- ============================================== -->
-    <div id="view-login" class="hidden max-w-md mx-auto mt-6 animate-fade-in-up">
+    <div id="view-unauth" class="max-w-md mx-auto mt-6 animate-fade-in-up">
         <div class="bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-gold">
             <div class="bg-navy px-6 py-8 text-center relative overflow-hidden">
                 <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#d4af37_1px,transparent_1px)] [background-size:16px_16px]"></div>
-                <img src="https://media.discordapp.net/attachments/886979097023103066/886979184004583434/OIG.png?ex=6ac654bc&is=6ac5033c&hm=a7700997efa4e6e067edc9eb234d81740bfe8565e22589aa44180c35dceee417&=&format=webp&quality=lossless" alt="OIG Logo" class="w-20 h-20 mx-auto mb-3 object-contain drop-shadow-lg relative z-10">
-                <h1 class="text-2xl font-extrabold text-white tracking-tight relative z-10">ระบบจเรตำรวจ</h1>
+                <img src="https://lh3.googleusercontent.com/d/1icVj5_vxhEKeEU_KH0qtZdwV7DU_Gl59=s1000" alt="OIG Logo" class="w-20 h-20 mx-auto mb-3 object-contain drop-shadow-lg relative z-10">
+                <h1 class="text-2xl font-extrabold text-white tracking-tight relative z-10">สำนักงานจเรตำรวจประชารักษ์ซิตี้</h1>
                 <p class="text-gold text-sm font-medium relative z-10">Office of Inspector General</p>
             </div>
+
             <div class="p-8">
+                <div id="login-error-alert" class="hidden bg-rose-50 border border-rose-300 text-rose-600 px-4 py-3 rounded-xl text-sm font-bold mb-6 flex items-center shadow-sm">
+                    <i class="fa-solid fa-circle-exclamation mr-2 text-lg"></i>
+                    <span id="login-error-msg">เข้าสู่ระบบไม่สำเร็จ</span>
+                </div>
+
                 <div class="space-y-5">
                     <div>
                         <label class="block text-sm font-bold text-navy mb-2">รหัสประจำตัวเจ้าหน้าที่ (Police ID)</label>
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"><i class="fa-solid fa-id-badge text-slate-400"></i></div>
-                            <input type="text" id="login_police_id" onkeyup="if(event.key === 'Enter') loginWithPoliceId()" class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-300 shadow-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-navy text-sm" placeholder="กรอกรหัสประจำตัว...">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-id-badge text-slate-400"></i>
+                            </div>
+                            <input type="text" id="login_police_id" onkeyup="if(event.key === 'Enter') handlePoliceIdNotice()" class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-300 shadow-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-navy text-sm transition-all" placeholder="กรอกรหัสประจำตัว...">
                         </div>
                     </div>
-                    <button onclick="loginWithPoliceId()" class="w-full bg-navy hover:bg-navy-light text-gold font-bold py-3.5 rounded-xl shadow-md transition border border-gold"><i class="fa-solid fa-right-to-bracket mr-2"></i> เข้าสู่ระบบ</button>
-                    
+
+                    <button onclick="handlePoliceIdNotice()" class="w-full bg-navy hover:bg-navy-light text-gold font-bold py-3.5 rounded-xl shadow-md transition border border-gold flex justify-center items-center">
+                        <i class="fa-solid fa-right-to-bracket mr-2"></i> เข้าสู่ระบบด้วย Police ID
+                    </button>
+
                     <div class="relative flex items-center py-3">
-                        <div class="flex-grow border-t border-slate-200"></div><span class="mx-4 text-slate-400 text-xs font-medium">หรือเข้าสู่ระบบผ่าน</span><div class="flex-grow border-t border-slate-200"></div>
+                        <div class="flex-grow border-t border-slate-200"></div>
+                        <span class="flex-shrink-0 mx-4 text-slate-400 text-xs font-medium">หรือเข้าสู่ระบบผ่าน</span>
+                        <div class="flex-grow border-t border-slate-200"></div>
                     </div>
+
+                    <button onclick="loginDiscord()" class="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-3.5 rounded-xl shadow-sm transition flex items-center justify-center border border-[#4752C4]">
+                        <i class="fa-brands fa-discord mr-2 text-xl"></i> ล็อกอินด้วย Discord
+                    </button>
                     
-                    <button onclick="loginDiscord()" class="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-3.5 rounded-xl shadow-sm transition border border-[#4752C4]"><i class="fa-brands fa-discord mr-2 text-xl"></i> ล็อกอินด้วย Discord</button>
-                    <p class="text-[11px] text-slate-400 text-center mt-6">* ระบบนี้สงวนสิทธิ์เฉพาะผู้ดูแลในสารบบฐานข้อมูลเท่านั้น</p>
+                    <p class="text-[11px] text-slate-400 text-center mt-6">* ระบบความปลอดภัย OIG REST API: สงวนสิทธิ์เฉพาะผู้ใช้ที่ได้รับการอนุมัติในฐานข้อมูล</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ============================================== -->
-    <!-- หน้าไม่มีสิทธิ์เข้าถึง -->
+    <!-- VIEW: ACCESS DENIED STATE (403 FORBIDDEN) -->
     <!-- ============================================== -->
-    <div id="view-denied" class="hidden bg-white border-2 border-rose-500 rounded-2xl shadow-xl max-w-2xl mx-auto mt-8 text-center p-12">
+    <div id="view-denied" class="hidden bg-white border-2 border-rose-500 rounded-2xl shadow-xl overflow-hidden max-w-2xl mx-auto mt-8 text-center p-12">
         <i class="fa-solid fa-lock text-6xl text-rose-500 mb-4"></i>
         <h2 class="text-2xl font-bold text-navy">คุณไม่มีสิทธิ์เข้าถึงระบบนี้</h2>
-        <p class="text-slate-600 mt-2">ระบบจเรตำรวจจำกัดสิทธิ์เฉพาะเจ้าหน้าที่ที่ได้รับการอนุมัติเท่านั้น</p>
-        <button onclick="logout()" class="mt-6 bg-slate-100 hover:bg-slate-200 text-slate-600 px-6 py-2.5 rounded-lg font-bold transition shadow-sm border border-slate-300">กลับสู่หน้าล็อกอิน</button>
+        <p class="text-slate-600 mt-2">ระบบจเรตำรวจจำกัดสิทธิ์เฉพาะเจ้าหน้าที่ที่ได้รับการลงทะเบียนในฐานข้อมูลเท่านั้น</p>
+        <p class="text-sm font-bold text-navy mt-4 bg-slate-100 py-2.5 rounded-lg border border-slate-300 shadow-sm select-all">
+            Discord ID: <span id="denied-discord-id" class="text-rose-600 font-mono"></span>
+        </p>
+        <p class="text-xs text-slate-400 mt-3">กรุณาแจ้ง Discord ID ด้านบนนี้ให้ผู้ดูแลระบบ (Owner/Admin) ลงทะเบียนเข้าสู่ระบบ</p>
+        <div class="mt-6 flex justify-center gap-3">
+            <button onclick="logout()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-navy font-bold rounded-xl text-sm border border-slate-300">
+                ออกจากระบบ
+            </button>
+        </div>
     </div>
 
     <!-- ============================================== -->
-    <!-- แอปหลัก (แสดงเมื่อเข้าสู่ระบบผ่านแล้ว) -->
+    <!-- VIEW: AUTHENTICATED APPLICATION -->
     <!-- ============================================== -->
-    <div id="view-app" class="hidden">
+    <div id="view-auth" class="hidden space-y-6">
         
         <!-- TAB 0: HOME -->
         <div id="tab-home" class="space-y-6">
             <div class="relative bg-navy text-white overflow-hidden rounded-2xl shadow-xl border-2 border-gold">
                 <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#d4af37_1px,transparent_1px)] [background-size:16px_16px]"></div>
                 <div class="relative px-6 py-12 sm:px-12 sm:py-16 text-center sm:text-left flex flex-col sm:flex-row items-center gap-8">
-                    <img src="https://media.discordapp.net/attachments/886979097023103066/886979184004583434/OIG.png?ex=6ac654bc&is=6ac5033c&hm=a7700997efa4e6e067edc9eb234d81740bfe8565e22589aa44180c35dceee417&=&format=webp&quality=lossless" class="w-32 h-32 object-contain drop-shadow-xl shrink-0">
+                    <img src="https://lh3.googleusercontent.com/d/1icVj5_vxhEKeEU_KH0qtZdwV7DU_Gl59=s1000" alt="OIG Logo" class="w-32 h-32 object-contain drop-shadow-xl shrink-0">
                     <div>
-                        <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mb-2">ยินดีต้อนรับ, <span class="text-gold" id="home_username">...</span></h1>
-                        <p class="text-sm sm:text-base text-slate-300 mb-6 font-medium max-w-xl">เข้าสู่ระบบบริหารจัดการข้อมูลบุคลากรและประวัติทางวินัยของสำนักงานจเรตำรวจ กรุณาปฏิบัติหน้าที่ด้วยความยุติธรรม</p>
+                        <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mb-2">ยินดีต้อนรับ, <span id="home-username" class="text-gold">-</span></h1>
+                        <p class="text-sm sm:text-base text-slate-300 mb-6 font-medium max-w-xl">เข้าสู่ระบบบริหารจัดการข้อมูลบุคลากรและประวัติทางวินัยของสำนักงานจเรตำรวจ กรุณาปฏิบัติหน้าที่ด้วยความยุติธรรมและรักษาความลับทางราชการ</p>
                         <div class="flex flex-wrap justify-center sm:justify-start gap-3">
-                            <button onclick="switchTab('roster')" class="bg-gold hover:bg-gold-light text-navy font-bold px-5 py-2.5 rounded-xl shadow-md transition border border-gold"><i class="fa-solid fa-magnifying-glass mr-2"></i> ค้นหาประวัติเจ้าหน้าที่</button>
-                            <button onclick="switchTab('penalty')" class="bg-navy-light hover:bg-white/10 text-gold font-bold px-5 py-2.5 rounded-xl shadow-md transition border border-gold"><i class="fa-solid fa-gavel mr-2"></i> บันทึกการลงโทษ</button>
+                            <button onclick="switchTab('roster')" class="bg-gold hover:bg-gold-light text-navy font-bold px-5 py-2.5 rounded-xl shadow-md transition border border-gold flex items-center text-sm"><i class="fa-solid fa-magnifying-glass mr-2"></i> ค้นหาประวัติเจ้าหน้าที่</button>
+                            <button onclick="switchTab('penalty')" class="bg-navy-light hover:bg-white/10 text-gold font-bold px-5 py-2.5 rounded-xl shadow-md transition border border-gold flex items-center text-sm"><i class="fa-solid fa-gavel mr-2"></i> บันทึกการลงโทษ</button>
                         </div>
                     </div>
                 </div>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center hover:shadow-md cursor-pointer transition" onclick="switchTab('rulebook')">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center hover:shadow-md transition cursor-pointer" onclick="switchTab('rulebook')">
                     <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-xl mx-auto mb-4 border border-blue-200"><i class="fa-solid fa-book-open"></i></div>
                     <h3 class="font-bold text-navy mb-2">ฐานข้อมูลบทลงโทษ</h3>
                     <p class="text-xs text-slate-500 leading-relaxed">ตรวจสอบกฎหมาย อัตราค่าปรับและระยะเวลาจำคุก ของสำนักงานจเรตำรวจ</p>
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center hover:shadow-md cursor-pointer transition" onclick="switchTab('penalty')">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center hover:shadow-md transition cursor-pointer" onclick="switchTab('penalty')">
                     <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center text-xl mx-auto mb-4 border border-rose-200"><i class="fa-solid fa-triangle-exclamation"></i></div>
                     <h3 class="font-bold text-navy mb-2">อัปเดตสถานะวินัย</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed">บันทึกพฤติการณ์ความผิด แนบหลักฐานภาพถ่าย และคำนวณวันสิ้นสุดโทษ</p>
+                    <p class="text-xs text-slate-500 leading-relaxed">บันทึกพฤติการณ์ความผิด แนบหลักฐานภาพถ่าย และให้ระบบคำนวณวันสิ้นสุดโทษอัตโนมัติ</p>
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center hover:shadow-md cursor-pointer transition" onclick="switchTab('roles')">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center hover:shadow-md transition cursor-pointer" onclick="switchTab('roles')">
                     <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center text-xl mx-auto mb-4 border border-emerald-200"><i class="fa-solid fa-clock-rotate-left"></i></div>
                     <h3 class="font-bold text-navy mb-2">ตั้งค่าระบบส่วนกลาง</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed">จัดการสิทธิ์ผู้ใช้งาน กำหนดประเภทโทษ และตรวจสอบประวัติการทำงาน</p>
+                    <p class="text-xs text-slate-500 leading-relaxed">จัดการสิทธิ์ผู้ใช้งานในระบบ กำหนดประเภทโทษ และเรียกดูบันทึกประวัติการทำงาน</p>
                 </div>
             </div>
         </div>
@@ -190,47 +193,91 @@
         <!-- TAB 1: ROSTER & SEARCH -->
         <div id="tab-roster" class="hidden">
             <div class="bg-slate-100 py-4 px-6 border-l-4 border-gold rounded-r-xl shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div><h2 class="text-2xl font-extrabold text-navy"><i class="fa-solid fa-users-viewfinder text-gold mr-3"></i> ทำเนียบรายชื่อกรมตำรวจ</h2></div>
+                <div>
+                    <h2 class="text-2xl font-extrabold text-navy flex items-center"><i class="fa-solid fa-users-viewfinder text-gold mr-3"></i> ทำเนียบรายชื่อกรมตำรวจ</h2>
+                    <p class="text-slate-500 text-sm mt-1">คลิกที่รายชื่อเพื่อดูแฟ้มประวัติส่วนตัวและใบเหลือง</p>
+                </div>
                 <div class="flex gap-2">
-                    <button onclick="switchTab('add-member')" class="bg-navy hover:bg-navy-light text-gold px-4 py-2.5 rounded-lg text-sm font-bold border border-gold shadow-sm transition"><i class="fa-solid fa-user-plus mr-2"></i> เพิ่มสมาชิก</button>
-                    <button onclick="searchRoster()" class="bg-white hover:bg-slate-50 text-navy px-4 py-2.5 rounded-lg text-sm font-bold border border-slate-300 shadow-sm transition"><i class="fa-solid fa-rotate-right mr-2 text-gold"></i> รีเฟรช</button>
+                    <button onclick="switchTab('add-member')" class="bg-navy text-gold px-4 py-2.5 rounded-lg text-sm font-bold border border-gold shadow-sm"><i class="fa-solid fa-user-plus mr-2"></i> เพิ่มสมาชิก</button>
+                    <button onclick="searchRoster(true)" class="bg-white text-navy px-4 py-2.5 rounded-lg text-sm font-bold border border-slate-300 shadow-sm"><i class="fa-solid fa-rotate-right mr-2 text-gold"></i> รีเฟรช</button>
                 </div>
             </div>
 
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-2">ค้นหาเจ้าหน้าที่ / รหัสประจำตัว</label>
-                        <input type="text" id="rosterSearchInput" onkeyup="if(event.key === 'Enter') searchRoster()" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy" placeholder="พิมพ์ชื่อ, รหัส, หรือรุ่น...">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <div class="flex flex-col">
+                        <label class="text-xs font-bold text-slate-500 mb-2">ค้นหาคีย์เวิร์ด</label>
+                        <input type="text" id="rosterSearchInput" onkeyup="if(event.key === 'Enter') searchRoster()" class="w-full p-2.5 bg-white border border-slate-300 shadow-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-navy text-sm" placeholder="พิมพ์ชื่อ, รหัส...">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-2">กรองสถานะปฏิบัติงาน</label>
-                        <select id="filterEmployment" onchange="searchRoster()" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy">
-                            <option value="">ทั้งหมด</option><option value="รับราชการ">รับราชการอยู่</option><option value="ปลดราชการ">ปลดราชการ</option>
+
+                    <div class="flex flex-col">
+                        <label class="text-xs font-bold text-slate-500 mb-2">กรองช่วงรุ่น</label>
+                        <select id="filterGenRange" onchange="searchRoster()" class="w-full p-2.5 bg-white border border-slate-300 shadow-sm rounded-xl text-sm font-medium text-navy">
+                            <option value="">รุ่นทั้งหมด</option>
+                            <option value="1-25">รุ่น 1 - 25</option>
+                            <option value="26-50">รุ่น 26 - 50</option>
+                            <option value="51-75">รุ่น 51 - 75</option>
+                            <option value="76-100">รุ่น 76 - 100</option>
+                            <option value="101+">รุ่น 101 ขึ้นไป</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-2">กรองสถานะวินัย</label>
-                        <select id="filterDiscipline" onchange="searchRoster()" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy">
-                            <option value="">ทั้งหมด</option><option value="0">ปกติ (0)</option><option value="1">ใบเหลือง (1)</option><option value="2">ใบส้ม (2)</option><option value="3">ใบแดง (3+)</option>
+                    
+                    <div class="flex flex-col">
+                        <label class="text-xs font-bold text-slate-500 mb-2">สังกัด (Department)</label>
+                        <select id="filterDepartment" onchange="searchRoster()" class="w-full p-2.5 bg-white border border-slate-300 shadow-sm rounded-xl text-sm text-slate-700">
+                            <option value="">สังกัดทั้งหมด</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-xs font-bold text-slate-500 mb-2">สถานะการปฏิบัติงาน</label>
+                        <select id="filterEmployment" onchange="searchRoster()" class="w-full p-2.5 bg-white border border-slate-300 shadow-sm rounded-xl text-sm text-slate-700">
+                            <option value="">สถานะทั้งหมด</option>
+                            <option value="รับราชการ">รับราชการอยู่</option>
+                            <option value="พักราชการ">พักราชการ</option>
+                            <option value="ปลดราชการ">ปลดราชการ</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-xs font-bold text-slate-500 mb-2">สถานะวินัย</label>
+                        <select id="filterDiscipline" onchange="searchRoster()" class="w-full p-2.5 bg-white border border-slate-300 shadow-sm rounded-xl text-sm text-slate-700">
+                            <option value="">โทษทั้งหมด</option>
+                            <option value="0">ปกติ (0 ใบ)</option>
+                            <option value="1">ใบเหลือง (1 ใบ)</option>
+                            <option value="2">ใบส้ม (2 ใบ)</option>
+                            <option value="3">ใบแดง (3 ใบขึ้นไป)</option>
                         </select>
                     </div>
                 </div>
             </div>
+
             <div id="roster-container" class="space-y-6"></div>
         </div>
 
         <!-- TAB 1.5: RULEBOOK -->
         <div id="tab-rulebook" class="hidden">
             <div class="bg-slate-100 py-4 px-6 border-l-4 border-gold rounded-r-xl shadow-sm mb-6 flex justify-between items-center">
-                <div><h2 class="text-2xl font-extrabold text-navy"><i class="fa-solid fa-book-open text-gold mr-3"></i> ฐานข้อมูลบทลงโทษ</h2></div>
-                <button id="btn-add-rule" onclick="openRuleModal()" class="hidden bg-navy hover:bg-navy-light text-gold px-4 py-2.5 rounded-lg text-sm font-bold border border-gold shadow-sm transition"><i class="fa-solid fa-plus mr-2"></i> เพิ่มบทลงโทษ</button>
+                <div>
+                    <h2 class="text-2xl font-extrabold text-navy flex items-center"><i class="fa-solid fa-book-open text-gold mr-3"></i> ฐานข้อมูลบทลงโทษ</h2>
+                    <p class="text-slate-500 text-sm mt-1">กฎหมายและอัตราโทษของสำนักงานจเรตำรวจ</p>
+                </div>
+                <div id="rulebook-admin-actions">
+                    <button onclick="openRuleModal()" class="bg-navy text-gold px-4 py-2.5 rounded-lg text-sm font-bold border border-gold shadow-sm hover:bg-navy-light transition"><i class="fa-solid fa-plus mr-2"></i> เพิ่มบทลงโทษ</button>
+                </div>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-lg">
                     <table class="w-full text-left text-sm min-w-[1000px]">
                         <thead class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
-                            <tr><th class="p-4 w-40 whitespace-nowrap">หมวดหมู่</th><th class="p-4 w-64">ความผิด / หัวข้อกฎหมาย</th><th class="p-4 min-w-[300px]">รายละเอียดการลงโทษ</th><th class="p-4 text-right w-32 whitespace-nowrap">ค่าปรับ</th><th class="p-4 text-right w-32 whitespace-nowrap">จำคุก / อื่นๆ</th><th id="th-manage" class="hidden p-4 text-center w-24 whitespace-nowrap">จัดการ</th></tr>
+                            <tr>
+                                <th class="p-4 w-40">หมวดหมู่</th>
+                                <th class="p-4 w-64">ความผิด / หัวข้อกฎหมาย</th>
+                                <th class="p-4 min-w-[300px]">รายละเอียดการลงโทษ</th>
+                                <th class="p-4 text-right w-32">ค่าปรับ</th>
+                                <th class="p-4 text-right w-32">จำคุก / อื่นๆ</th>
+                                <th class="p-4 text-center w-24">จัดการ</th>
+                            </tr>
                         </thead>
                         <tbody id="rulebook-container" class="divide-y divide-slate-100"></tbody>
                     </table>
@@ -238,23 +285,59 @@
             </div>
         </div>
 
-        <!-- TAB 2: ADD MEMBERS -->
+        <!-- TAB 2: BATCH INSERT -->
         <div id="tab-add-member" class="hidden">
             <div class="bg-slate-100 py-4 px-6 border-l-4 border-gold rounded-r-xl shadow-sm mb-6 flex justify-between items-center">
-                <div><h2 class="text-2xl font-extrabold text-navy"><i class="fa-solid fa-user-plus text-gold mr-3"></i> ลงทะเบียนเจ้าหน้าที่ใหม่</h2></div>
+                <div>
+                    <h2 class="text-2xl font-extrabold text-navy flex items-center"><i class="fa-solid fa-user-plus text-gold mr-3"></i> ลงทะเบียนเจ้าหน้าที่ใหม่</h2>
+                    <p class="text-slate-500 text-sm mt-1">เพิ่มข้อมูลเจ้าหน้าที่เข้าสู่สารบบฐานข้อมูล (สามารถเพิ่มพร้อมกันได้หลายราย)</p>
+                </div>
             </div>
-            <div class="bg-white border-2 border-gold rounded-2xl shadow-xl max-w-4xl mx-auto">
+            <div class="bg-white border-2 border-gold rounded-2xl shadow-xl max-w-5xl mx-auto">
                 <div class="bg-navy px-5 py-4 border-b border-gold flex justify-between items-center">
                     <h3 class="font-bold text-white text-lg">ฟอร์มบันทึกข้อมูล (Batch Insert)</h3>
-                    <button type="button" onclick="addMemberRow()" class="bg-navy-light hover:bg-white/10 text-gold px-3 py-1.5 rounded-lg text-xs font-bold border border-gold/50 shadow-sm transition"><i class="fa-solid fa-plus mr-1"></i> เพิ่มบรรทัด</button>
+                    <button type="button" onclick="addMemberRow()" class="bg-navy-light text-gold px-3 py-1.5 rounded-lg text-xs font-bold border border-gold/50 shadow-sm"><i class="fa-solid fa-plus mr-1"></i> เพิ่มบรรทัด</button>
                 </div>
                 <form id="addMemberForm" onsubmit="submitNewMembers(event)" class="p-6 space-y-6">
                     <div id="member-rows-container" class="space-y-4">
-                        <div class="member-row flex flex-col md:flex-row gap-4 p-5 bg-slate-50 border border-slate-200 rounded-xl">
-                            <div class="flex-1"><label class="block font-bold text-xs mb-2 text-navy">รุ่น *</label><input type="number" name="gen" required class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-navy"></div>
-                            <div class="flex-1"><label class="block font-bold text-xs mb-2 text-navy">รหัส *</label><input type="text" name="policeId" required class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-navy"></div>
-                            <div class="flex-[2]"><label class="block font-bold text-xs mb-2 text-navy">ยศ ชื่อ นามสกุล *</label><input type="text" name="fullName" required class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-navy"></div>
-                            <button type="button" onclick="removeMemberRow(this)" class="remove-btn hidden text-rose-400 hover:text-rose-600 transition mt-8"><i class="fa-solid fa-trash-can text-lg"></i></button>
+                        <div class="member-row flex flex-col xl:flex-row gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl items-start xl:items-end">
+                            <div class="w-full xl:w-20"><label class="block font-bold text-xs mb-1 text-navy">รุ่น *</label><input type="number" name="gen" required class="w-full border shadow-sm rounded-lg p-2 bg-white text-sm" placeholder="1"></div>
+                            <div class="w-full xl:w-28"><label class="block font-bold text-xs mb-1 text-navy">รหัส *</label><input type="text" name="policeId" required class="w-full border shadow-sm rounded-lg p-2 bg-white text-sm" placeholder="6701"></div>
+                            
+                            <div class="w-full xl:w-36">
+                                <label class="block font-bold text-xs mb-1 text-navy">ยศ *</label>
+                                <select name="rank" required class="w-full border shadow-sm rounded-lg p-2 bg-white text-sm font-medium">
+                                    <option value="ไม่ระบุ">ไม่ระบุ</option>
+                                    <option value="พล.ต.อ.">พล.ต.อ.</option><option value="Agent">Agent</option><option value="พล.ต.ท.">พล.ต.ท.</option>
+                                    <option value="พล.ต.ต.">พล.ต.ต.</option><option value="พ.ต.อ.">พ.ต.อ.</option><option value="พ.ต.ท.">พ.ต.ท.</option>
+                                    <option value="พ.ต.ต.">พ.ต.ต.</option><option value="ร.ต.อ.">ร.ต.อ.</option><option value="ร.ต.ท.">ร.ต.ท.</option>
+                                    <option value="ร.ต.ต.">ร.ต.ต.</option><option value="ด.ต.">ด.ต.</option><option value="จ.ส.ต.">จ.ส.ต.</option>
+                                    <option value="ส.ต.อ.">ส.ต.อ.</option><option value="ส.ต.ท.">ส.ต.ท.</option><option value="ส.ต.ต.">ส.ต.ต.</option>
+                                    <option value="ว่าที่.สิบตรี">ว่าที่.สิบตรี</option><option value="นร.ตร.">นร.ตร.</option>
+                                </select>
+                            </div>
+
+                            <div class="w-full xl:w-24">
+                                <label class="block font-bold text-xs mb-1 text-navy">คำนำหน้า</label>
+                                <select name="medPrefix" class="w-full border shadow-sm rounded-lg p-2 bg-white text-sm">
+                                    <option value="">ไม่มี</option><option value="นพ.">นพ.</option><option value="พญ.">พญ.</option>
+                                </select>
+                            </div>
+
+                            <div class="flex-1 w-full"><label class="block font-bold text-xs mb-1 text-navy">ชื่อ - นามสกุล *</label><input type="text" name="nameOnly" required placeholder="พิมพ์ชื่อ นามสกุล..." class="w-full border shadow-sm rounded-lg p-2 bg-white text-sm"></div>
+                            
+                            <div class="w-full xl:w-48">
+                                <label class="block font-bold text-xs mb-1 text-navy">สังกัด</label>
+                                <select name="department" class="w-full border shadow-sm rounded-lg p-2 bg-white text-sm">
+                                    <option value="-">ไม่ระบุ (-)</option>
+                                    <option value="สำนักงานสอบสวนกลาง - F.I.B">สำนักงานสอบสวนกลาง - F.I.B</option>
+                                    <option value="นครบาล - Metropolitant">นครบาล - Metropolitant</option>
+                                    <option value="เชอร์รีฟ - Sheriff">เชอร์รีฟ - Sheriff</option>
+                                </select>
+                            </div>
+
+                            <div class="w-full xl:w-36"><label class="block font-bold text-xs mb-1 text-navy">หน่วย/ฝ่าย</label><input type="text" name="unit" placeholder="เช่น ฝ่ายสืบสวน" class="w-full border shadow-sm rounded-lg p-2 bg-white text-sm"></div>
+                            <button type="button" onclick="removeMemberRow(this)" class="remove-btn hidden text-rose-400 hover:text-rose-600 transition pb-2"><i class="fa-solid fa-trash-can text-lg"></i></button>
                         </div>
                     </div>
                     <div class="flex justify-end pt-4"><button type="submit" class="bg-navy hover:bg-navy-light text-gold font-bold px-8 py-3 rounded-xl shadow-md transition border border-gold"><i class="fa-solid fa-save mr-2"></i> บันทึกข้อมูล</button></div>
@@ -265,74 +348,155 @@
         <!-- TAB 3: PENALTY SYSTEM -->
         <div id="tab-penalty" class="hidden">
             <div class="bg-slate-100 py-4 px-6 border-l-4 border-rose-500 rounded-r-xl shadow-sm mb-6 flex justify-between items-center">
-                <div><h2 class="text-2xl font-extrabold text-navy"><i class="fa-solid fa-gavel text-rose-500 mr-3"></i> ระบบพิจารณาโทษ</h2></div>
+                <div>
+                    <h2 class="text-2xl font-extrabold text-navy flex items-center"><i class="fa-solid fa-gavel text-rose-500 mr-3"></i> ระบบพิจารณาโทษ</h2>
+                    <p class="text-slate-500 text-sm mt-1">บันทึกประเภทพฤติการณ์ แนบหลักฐานภาพถ่าย และคำนวณวันสิ้นสุดโทษ</p>
+                </div>
             </div>
             <div class="bg-white border-2 border-rose-500 rounded-2xl shadow-xl max-w-3xl mx-auto">
                 <div class="bg-navy px-5 py-4 border-b border-rose-500"><h3 class="font-bold text-white text-lg">ฟอร์มบันทึกบทลงโทษ</h3></div>
                 <form id="penaltyForm" onsubmit="submitPenalty(event)" class="p-6 space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div><label class="block font-bold text-sm mb-2 text-navy">รหัสประจำตัวผู้กระทำผิด *</label><input type="text" id="pen_police_id" required class="w-full border border-slate-300 shadow-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-navy"></div>
-                        <div><label class="block font-bold text-sm mb-2 text-navy">ประเภทบทลงโทษ *</label><select id="pen_action_type" required class="w-full border border-slate-300 shadow-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-navy"><option value="" disabled selected>โหลดข้อมูล...</option></select></div>
+                    <div>
+                        <label class="block font-bold text-sm mb-2 text-navy">รหัสประจำตัวผู้กระทำผิด *</label>
+                        <input type="text" id="pen_police_id" required oninput="checkPoliceIdPreview()" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 bg-white focus:ring-2 focus:ring-navy focus:outline-none placeholder-slate-400" placeholder="กรอกรหัสประจำตัว เช่น 6704...">
+                        
+                        <!-- Preview Card -->
+                        <div id="pen_user_preview" class="mt-2.5 hidden transition-all duration-300"></div>
                     </div>
-                    <div><label class="block font-bold text-sm mb-2 text-navy">เหตุผล / รายละเอียดความผิด *</label><textarea id="pen_reason" required rows="3" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-navy"></textarea></div>
+
+                    <div>
+                        <label class="block font-bold text-sm mb-2 text-navy">ประเภทบทลงโทษ (เลือกได้หลายข้อ) *</label>
+                        <div id="pen_action_type_container" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-4 border border-slate-200 bg-slate-50 rounded-xl max-h-48 overflow-y-auto custom-scrollbar">
+                            <p class="text-xs text-slate-400 col-span-full text-center py-2"><i class="fa-solid fa-spinner fa-spin mr-1"></i> กำลังโหลดประเภทบทลงโทษ...</p>
+                        </div>
+                    </div>
+
+                    <div id="pen_fine_container" class="hidden animate-fade-in">
+                        <label class="block font-bold text-sm mb-2 text-emerald-700"><i class="fa-solid fa-money-bill-wave mr-1"></i> จำนวนเงินค่าปรับ ($) *</label>
+                        <input type="number" id="pen_fine_amount" min="0" placeholder="กรอกจำนวนเงินค่าปรับ..." class="w-full border border-emerald-300 shadow-sm rounded-xl p-3 bg-emerald-50/50 focus:ring-2 focus:ring-emerald-600 focus:outline-none font-bold text-navy">
+                    </div>
+                    
+                    <div>
+                        <label class="block font-bold text-sm mb-2 text-navy">เหตุผล / รายละเอียดความผิด *</label>
+                        <textarea id="pen_reason" required rows="3" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 bg-white focus:ring-2 focus:ring-navy focus:outline-none placeholder-slate-400" placeholder="อธิบายพฤติการณ์ความผิด..."></textarea>
+                    </div>
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-slate-200 pt-6">
                         <div>
                             <label class="block font-bold text-sm mb-2 text-navy">ระยะเวลา *</label>
-                            <select id="pen_type" required onchange="togglePenaltyDurationInput()" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-navy">
-                                <option value="ถาวร">ถาวร</option><option value="ระบุเดือน">กำหนดเป็นเดือน</option><option value="ระบุวัน">กำหนดเป็นวัน</option>
+                            <select id="pen_type" required onchange="togglePenaltyDurationInput()" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 bg-white focus:ring-2 focus:ring-navy focus:outline-none">
+                                <option value="ถาวร">ถาวร (ไม่มีวันหมดอายุ)</option>
+                                <option value="ระบุเดือน">กำหนดเป็นเดือน</option>
+                                <option value="ระบุวัน">กำหนดเป็นวัน (ระบุวันที่เอง)</option>
                             </select>
                         </div>
-                        <div id="pen_month_container" class="hidden"><label class="block font-bold text-sm mb-2 text-navy">จำนวนเดือน *</label><input type="number" id="pen_months" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-navy"></div>
+                        <div id="pen_month_container" class="hidden">
+                            <label class="block font-bold text-sm mb-2 text-navy">จำนวนเดือน *</label>
+                            <input type="number" id="pen_months" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 bg-white focus:ring-2 focus:ring-navy focus:outline-none placeholder-slate-400" placeholder="ระบุตัวเลข...">
+                        </div>
+                        
                         <div id="pen_date_container" class="hidden col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div><label class="block font-bold text-sm mb-2 text-navy">วันที่เริ่มต้น *</label><input type="date" id="pen_start_date" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-navy"></div>
-                            <div><label class="block font-bold text-sm mb-2 text-rose-600">วันที่สิ้นสุด *</label><input type="date" id="pen_end_date" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-navy"></div>
+                            <div>
+                                <label class="block font-bold text-sm mb-2 text-navy">วันที่เริ่มต้น *</label>
+                                <input type="date" id="pen_start_date" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 bg-white focus:ring-2 focus:ring-navy focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-sm mb-2 text-rose-600">วันที่สิ้นสุด *</label>
+                                <input type="date" id="pen_end_date" class="w-full border border-slate-300 shadow-sm rounded-xl p-3 bg-white focus:ring-2 focus:ring-navy focus:outline-none">
+                            </div>
                         </div>
                     </div>
-                    <div class="border-t border-slate-200 pt-6"><label class="block font-bold text-sm mb-2 text-navy">รูปลิงก์หลักฐาน (URL หรือ Base64) *</label><input type="file" id="pen_file" accept="image/*" required class="w-full text-sm border border-slate-300 shadow-sm p-2 rounded-xl bg-white focus:outline-none"></div>
-                    <div class="flex justify-end pt-4"><button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-8 py-3 rounded-xl shadow-md transition"><i class="fa-solid fa-check mr-2"></i> ยืนยันการลงโทษ</button></div>
+
+                    <div class="border-t border-slate-200 pt-6">
+                        <label class="block font-bold text-sm mb-2 text-navy">รูปภาพหลักฐาน *</label>
+                        <input type="file" id="pen_file" accept="image/jpeg,image/png,image/webp" required class="w-full text-sm border border-slate-300 shadow-sm p-2 rounded-xl bg-white focus:outline-none">
+                        <p class="text-[11px] text-slate-400 mt-1">* รองรับไฟล์รูปภาพ JPEG, PNG, WebP ขนาดไม่เกิน 5MB</p>
+                    </div>
+                    
+                    <div class="flex justify-end pt-4">
+                        <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-8 py-3 rounded-xl shadow-md transition"><i class="fa-solid fa-check mr-2"></i> ยืนยันการลงโทษ</button>
+                    </div>
                 </form>
             </div>
         </div>
 
-        <!-- TAB 4: ROLES & SYSTEM SETTINGS -->
+        <!-- TAB 4: ROLES & AUDIT -->
         <div id="tab-roles" class="hidden space-y-6">
+            <div class="bg-slate-100 py-4 px-6 border-l-4 border-emerald-500 rounded-r-xl shadow-sm mb-6 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-navy flex items-center"><i class="fa-solid fa-clock-rotate-left text-emerald-500 mr-3"></i> ตั้งค่าระบบส่วนกลาง</h2>
+                    <p class="text-slate-500 text-sm mt-1">จัดการสิทธิ์ผู้ใช้งาน, กำหนดประเภทบทลงโทษ และตรวจสอบประวัติการทำงาน</p>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- User Roles Management -->
                 <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col">
-                    <h3 class="text-xl font-bold text-navy mb-4 border-b border-slate-100 pb-3">จัดการยศผู้ใช้งาน</h3>
-                    <div class="flex flex-col sm:flex-row gap-3 mb-5">
-                        <input type="text" id="role_discord_id" placeholder="กรอก ID..." class="flex-grow border border-slate-300 shadow-sm rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy">
-                        <div class="flex gap-2 shrink-0">
-                            <select id="role_select" class="border border-slate-300 shadow-sm rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy">
-                                <option value="Admin">แอดมิน (Admin)</option><option value="Guest">ถอดยศ (Guest)</option>
-                                <option value="Screener" id="opt-screener" class="hidden">คัดกรอง (Screener)</option>
-                            </select>
-                            <button onclick="updateRole()" class="bg-navy hover:bg-navy-light text-white px-5 rounded-lg font-bold text-sm transition">ปรับยศ</button>
-                        </div>
+                    <h3 class="text-xl font-bold text-navy mb-4 border-b pb-3">จัดการยศผู้ใช้งาน (RBAC)</h3>
+                    <div id="role-update-controls" class="flex flex-col sm:flex-row gap-3 mb-5">
+                        <select id="role_target_user" class="border rounded-lg p-2.5 text-sm bg-white flex-grow">
+                            <option value="">เลือกผู้ใช้ที่ต้องการเปลี่ยนยศ...</option>
+                        </select>
+                        <select id="role_select" class="border rounded-lg p-2.5 text-sm bg-white font-bold text-navy">
+                            <option value="Screener">Screener</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Guest">Guest</option>
+                        </select>
+                        <button onclick="updateRole()" class="bg-navy hover:bg-navy-light text-white px-5 py-2.5 rounded-lg font-bold text-sm shrink-0 transition">ปรับยศ</button>
                     </div>
-                    <div class="overflow-x-auto border border-slate-200 rounded-xl flex-grow custom-scrollbar">
-                        <table class="w-full text-left text-sm min-w-[400px]"><thead class="bg-slate-100 text-slate-600"><tr class="border-b border-slate-200"><th class="p-3">Discord/Police ID</th><th class="p-3">ชื่อ</th><th class="p-3">ยศ</th></tr></thead><tbody id="usersListTable" class="divide-y divide-slate-100"></tbody></table>
+                    <div class="overflow-x-auto border rounded-xl flex-grow custom-scrollbar max-h-80">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3">Discord ID</th>
+                                    <th class="p-3">ชื่อ</th>
+                                    <th class="p-3">ยศปัจจุบัน</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersListTable" class="divide-y divide-slate-100"></tbody>
+                        </table>
                     </div>
                 </div>
 
+                <!-- Penalty Types Management -->
                 <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col">
-                    <h3 class="text-xl font-bold text-navy mb-4 border-b border-slate-100 pb-3">ตั้งค่าประเภทตัวเลือกบทลงโทษ</h3>
-                    <div class="flex gap-3 mb-5">
-                        <input type="text" id="new_penalty_type_name" placeholder="เช่น ฝากขัง..." class="flex-grow border border-slate-300 shadow-sm rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy">
-                        <button onclick="addPenaltyType()" class="bg-rose-600 hover:bg-rose-700 text-white px-6 rounded-lg font-bold text-sm transition"><i class="fa-solid fa-plus mr-1"></i> เพิ่ม</button>
+                    <h3 class="text-xl font-bold text-navy mb-4 border-b pb-3">ตั้งค่าประเภทตัวเลือกบทลงโทษ</h3>
+                    <div id="penalty-type-controls" class="flex gap-3 mb-5">
+                        <input type="text" id="new_penalty_type_name" placeholder="เช่น ฝากขัง, ตักเตือน..." class="flex-grow border rounded-lg p-2.5 text-sm bg-white">
+                        <button onclick="addPenaltyType()" class="bg-rose-600 hover:bg-rose-700 text-white px-6 rounded-lg font-bold text-sm shrink-0 transition">เพิ่ม</button>
                     </div>
-                    <div class="overflow-x-auto border border-slate-200 rounded-xl flex-grow custom-scrollbar">
-                        <table class="w-full text-left text-sm min-w-[300px]"><thead class="bg-slate-100 text-slate-600"><tr class="border-b border-slate-200"><th class="p-3">ชื่อประเภท</th><th class="p-3 text-right w-20">จัดการ</th></tr></thead><tbody id="penaltyTypesTable" class="divide-y divide-slate-100"></tbody></table>
+                    <div class="overflow-x-auto border rounded-xl flex-grow custom-scrollbar max-h-80">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3">ชื่อประเภทบทลงโทษ</th>
+                                    <th class="p-3 text-right">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="penaltyTypesTable" class="divide-y divide-slate-100"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
+            <!-- Audit Logs -->
             <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-                <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-5">
-                    <h3 class="text-xl font-bold text-navy"><i class="fa-solid fa-list-check mr-2"></i> Audit Logs</h3>
-                    <button onclick="loadAuditLogs()" class="bg-slate-100 hover:bg-slate-200 text-navy px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition"><i class="fa-solid fa-rotate-right mr-1"></i> โหลดข้อมูลใหม่</button>
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-slate-100 pb-3 mb-5 gap-3">
+                    <h3 class="text-xl font-bold text-navy"><i class="fa-solid fa-list-check mr-2"></i> บันทึกประวัติการทำงานระบบ (Audit Logs)</h3>
+                    <button onclick="loadAuditLogs(true)" class="text-navy bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition"><i class="fa-solid fa-rotate-right mr-1"></i> โหลดข้อมูลใหม่</button>
                 </div>
-                <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl max-h-80">
-                    <table class="w-full text-left text-xs min-w-[800px]"><thead class="bg-slate-100 sticky top-0 shadow-sm text-slate-600"><tr><th class="p-3 w-36 whitespace-nowrap">วันที่/เวลา</th><th class="p-3 w-48 whitespace-nowrap">Admin ID</th><th class="p-3">รายละเอียด</th></tr></thead><tbody id="auditListTable" class="divide-y divide-slate-100"></tbody></table>
+                <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl max-h-96">
+                    <table class="w-full text-left text-xs min-w-[800px]">
+                        <thead class="bg-slate-100 sticky top-0 z-10 shadow-sm text-slate-600 font-bold">
+                            <tr>
+                                <th class="p-3 w-44 whitespace-nowrap">วันที่/เวลา (Bangkok)</th>
+                                <th class="p-3 w-48 whitespace-nowrap">ผู้ดำเนินการ (Actor)</th>
+                                <th class="p-3 w-40 whitespace-nowrap">การกระทำ (Action)</th>
+                                <th class="p-3">รายละเอียด (Description)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditListTable" class="divide-y divide-slate-100 font-normal"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -340,349 +504,1432 @@
     </div>
 </main>
 
-<!-- PROFILE MODAL -->
+<!-- ============================================== -->
+<!-- MODAL: แฟ้มประวัติเจ้าหน้าที่ตำรวจ -->
+<!-- ============================================== -->
 <div id="profileModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[100] px-4">
     <div class="bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-        <div class="bg-navy px-6 py-4 flex justify-between items-center border-b border-gold"><h3 class="font-bold text-white text-lg"><i class="fa-solid fa-id-card text-gold mr-2"></i> แฟ้มประวัติ</h3><button onclick="document.getElementById('profileModal').classList.replace('flex', 'hidden')" class="text-slate-300 hover:text-rose-400"><i class="fa-solid fa-xmark text-2xl"></i></button></div>
+        <div class="bg-navy px-6 py-4 flex justify-between items-center border-b border-gold shrink-0">
+            <h3 class="font-bold text-white text-lg"><i class="fa-solid fa-id-card text-gold mr-2"></i> แฟ้มประวัติเจ้าหน้าที่ตำรวจ</h3>
+            <button onclick="closeProfileModal()" class="text-slate-300 hover:text-rose-400"><i class="fa-solid fa-xmark text-2xl"></i></button>
+        </div>
         <div class="p-6 overflow-y-auto custom-scrollbar flex-grow bg-slate-50">
             <div id="profileLoading" class="text-center py-10"><i class="fa-solid fa-spinner fa-spin text-4xl text-navy"></i></div>
+            
             <div id="profileContent" class="hidden space-y-6">
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                     <div class="flex justify-between items-start mb-4">
                         <h4 class="font-bold text-navy border-b border-slate-200 pb-1">ข้อมูลยืนยันตัวตน</h4>
-                        <button onclick="toggleEditProfile()" class="text-xs bg-slate-100 hover:bg-slate-200 border border-slate-200 px-3 py-1 rounded-md text-navy font-bold transition"><i class="fa-solid fa-pen"></i> แก้ไขประวัติ</button>
+                        <div class="flex gap-2">
+                            <button onclick="toggleEditProfile()" class="text-xs bg-slate-100 hover:bg-slate-200 border border-slate-200 px-3 py-1 rounded-md text-navy font-bold shadow-sm transition"><i class="fa-solid fa-pen mr-1"></i> แก้ไขประวัติ</button>
+                            <button id="btn-delete-member" onclick="confirmDeleteMember()" class="text-xs bg-rose-50 hover:bg-rose-100 border border-rose-300 px-3 py-1 rounded-md text-rose-600 font-bold shadow-sm transition"><i class="fa-solid fa-trash-can mr-1"></i> ลบข้อมูล</button>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 text-sm" id="displayProfileView">
-                        <div><span class="text-slate-500">รหัส:</span> <span id="p_id" class="font-bold text-navy"></span></div>
-                        <div><span class="text-slate-500">รุ่น:</span> <span id="p_gen" class="font-bold text-navy"></span></div>
-                        <div class="col-span-2"><span class="text-slate-500">ชื่อ:</span> <span id="p_name" class="font-bold text-base text-navy"></span></div>
+                    
+                    <div id="displayProfileView" class="grid grid-cols-2 gap-4 text-sm">
+                        <div><span class="text-slate-500">รหัสประจำตัว:</span> <span id="p_id" class="font-bold text-navy"></span></div>
+                        <div><span class="text-slate-500">นักเรียนตำรวจรุ่นที่:</span> <span id="p_gen" class="font-bold text-navy"></span></div>
+                        <div class="col-span-2"><span class="text-slate-500">ชื่อปัจจุบัน:</span> <span id="p_name" class="font-bold text-base text-navy"></span></div>
+                        <div><span class="text-slate-500">สังกัด (Department):</span> <span id="p_dept" class="font-bold text-blue-700"></span></div>
+                        <div><span class="text-slate-500">หน่วย/ฝ่าย (Unit):</span> <span id="p_unit" class="font-bold text-amber-700"></span></div>
                         <div class="col-span-2"><span class="text-slate-500">สถานะวินัย:</span> <span id="p_status" class="font-bold text-navy"></span></div>
                     </div>
+                    
+                    <!-- ฟอร์มแก้ไขประวัติ -->
                     <form id="editProfileForm" onsubmit="saveProfileEdit(event)" class="hidden space-y-3 mt-2">
-                        <input type="hidden" id="e_row"><input type="hidden" id="e_id"><input type="hidden" id="e_oldname">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="text-xs font-bold text-navy mb-1 block">รุ่น</label><input type="number" id="e_gen" class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy"></div>
-                            <div class="col-span-2"><label class="text-xs font-bold text-navy mb-1 block">ชื่อ-นามสกุล</label><input type="text" id="e_name" class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy"></div>
+                        <input type="hidden" id="e_member_id">
+                        <input type="hidden" id="e_id">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="text-xs font-bold text-navy mb-1 block">รุ่น</label><input type="number" id="e_gen" class="w-full border shadow-sm rounded-lg p-2 text-sm bg-white"></div>
+                            <div>
+                                <label class="text-xs font-bold text-navy mb-1 block">สถานะปฏิบัติงาน *</label>
+                                <select id="e_status" class="w-full border shadow-sm rounded-lg p-2 text-sm bg-white font-bold text-navy">
+                                    <option value="รับราชการ">รับราชการอยู่</option>
+                                    <option value="พักราชการ">พักราชการ</option>
+                                    <option value="ปลดราชการ">ปลดราชการ</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-navy mb-1 block">ยศ *</label>
+                                <select id="e_rank" class="w-full border shadow-sm rounded-lg p-2 text-sm bg-white font-medium">
+                                    <option value="ไม่ระบุ">ไม่ระบุ</option>
+                                    <option value="พล.ต.อ.">พล.ต.อ.</option><option value="Agent">Agent</option><option value="พล.ต.ท.">พล.ต.ท.</option>
+                                    <option value="พล.ต.ต.">พล.ต.ต.</option><option value="พ.ต.อ.">พ.ต.อ.</option><option value="พ.ต.ท.">พ.ต.ท.</option>
+                                    <option value="พ.ต.ต.">พ.ต.ต.</option><option value="ร.ต.อ.">ร.ต.อ.</option><option value="ร.ต.ท.">ร.ต.ท.</option>
+                                    <option value="ร.ต.ต.">ร.ต.ต.</option><option value="ด.ต.">ด.ต.</option><option value="จ.ส.ต.">จ.ส.ต.</option>
+                                    <option value="ส.ต.อ.">ส.ต.อ.</option><option value="ส.ต.ท.">ส.ต.ท.</option><option value="ส.ต.ต.">ส.ต.ต.</option>
+                                    <option value="ว่าที่.สิบตรี">ว่าที่.สิบตรี</option><option value="นร.ตร.">นร.ตร.</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-navy mb-1 block">คำนำหน้า</label>
+                                <select id="e_medPrefix" class="w-full border shadow-sm rounded-lg p-2 text-sm bg-white">
+                                    <option value="">ไม่มี</option><option value="นพ.">นพ.</option><option value="พญ.">พญ.</option>
+                                </select>
+                            </div>
+
+                            <div class="col-span-2"><label class="text-xs font-bold text-navy mb-1 block">ชื่อ - นามสกุล *</label><input type="text" id="e_nameOnly" required class="w-full border shadow-sm rounded-lg p-2 text-sm bg-white"></div>
+                            
+                            <div>
+                                <label class="text-xs font-bold text-navy mb-1 block">สังกัด (Department)</label>
+                                <select id="e_dept" class="w-full border shadow-sm rounded-lg p-2 text-sm bg-white">
+                                    <option value="-">ไม่ระบุ (-)</option>
+                                    <option value="สำนักงานสอบสวนกลาง - F.I.B">สำนักงานสอบสวนกลาง - F.I.B</option>
+                                    <option value="นครบาล - Metropolitant">นครบาล - Metropolitant</option>
+                                    <option value="เชอร์รีฟ - Sheriff">เชอร์รีฟ - Sheriff</option>
+                                </select>
+                            </div>
+
+                            <div><label class="text-xs font-bold text-navy mb-1 block">หน่วย/ฝ่าย (Unit)</label><input type="text" id="e_unit" placeholder="เช่น ฝ่ายสืบสวน, SWAT" class="w-full border shadow-sm rounded-lg p-2 text-sm bg-white"></div>
                         </div>
-                        <div class="flex justify-between items-center border-t border-slate-100 pt-4 mt-2">
-                            <button type="button" onclick="document.getElementById('editProfileForm').classList.add('hidden'); document.getElementById('displayProfileView').classList.remove('hidden');" class="text-xs text-slate-500 hover:text-slate-700 underline font-medium">ยกเลิก</button>
-                            <button type="submit" class="bg-navy hover:bg-navy-light text-gold text-xs px-5 py-2.5 rounded-lg font-bold border border-gold transition">บันทึกข้อมูล</button>
+                        <div class="flex justify-between items-center border-t pt-4 mt-2">
+                            <button type="button" onclick="document.getElementById('editProfileForm').classList.add('hidden'); document.getElementById('displayProfileView').classList.remove('hidden');" class="text-xs text-slate-500 underline">ยกเลิก</button>
+                            <button type="submit" class="bg-navy text-gold text-xs px-5 py-2.5 rounded-lg font-bold border border-gold">บันทึกข้อมูล</button>
                         </div>
                     </form>
                 </div>
+                
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h4 class="font-bold text-rose-600 border-b border-slate-100 pb-2 mb-4">ประวัติการลงโทษ</h4>
+                    <h4 class="font-bold text-rose-600 border-b border-slate-100 pb-2 mb-4"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ประวัติพฤติการณ์/การลงโทษ</h4>
                     <div id="p_penalties" class="space-y-3"></div>
                 </div>
+                
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h4 class="font-bold text-slate-600 border-b border-slate-100 pb-2 mb-4"><i class="fa-solid fa-clock-rotate-left mr-1"></i> ประวัติการเปลี่ยนชื่อ</h4>
+                    <ul id="p_names" class="text-sm space-y-2 text-slate-600"></ul>
+                </div>
             </div>
+            
             <div id="retireSection" class="hidden mt-6 pt-4 border-t border-slate-200 text-right">
-                <button onclick="updateRetireStatus('ปลดราชการ')" id="btn_retire" class="text-xs bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-4 py-2 rounded-lg border border-rose-200 transition">ทำการปลดราชการรหัสนี้</button>
-                <button onclick="updateRetireStatus('รับราชการ')" id="btn_unretire" class="hidden text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold px-4 py-2 rounded-lg border border-emerald-200 transition">ยกเลิกปลดราชการ (ดึงกลับ)</button>
+                <button onclick="updateRetireStatus('ปลดราชการ')" id="btn_retire" class="text-xs bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-4 py-2 rounded-lg shadow-sm border border-rose-200 transition">ทำการปลดราชการรหัสนี้</button>
+                <button onclick="updateRetireStatus('รับราชการ')" id="btn_unretire" class="hidden text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold px-4 py-2 rounded-lg shadow-sm border border-emerald-200 transition">ยกเลิกปลดราชการ (ดึงกลับ)</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- RULE MODAL -->
+<!-- ============================================== -->
+<!-- MODAL: บทลงโทษ (RULEBOOK) -->
+<!-- ============================================== -->
 <div id="ruleModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[100] px-4">
     <div class="bg-white rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl">
-        <div class="bg-navy px-6 py-4 flex justify-between items-center"><h3 class="font-bold text-white text-lg" id="ruleModalTitle">เพิ่มบทลงโทษ</h3><button onclick="document.getElementById('ruleModal').classList.replace('flex', 'hidden')" class="text-slate-300 hover:text-rose-400"><i class="fa-solid fa-xmark text-2xl"></i></button></div>
+        <div class="bg-navy px-6 py-4 flex justify-between items-center border-b border-gold">
+            <h3 class="font-bold text-white text-lg" id="ruleModalTitle">เพิ่มบทลงโทษใหม่</h3>
+            <button onclick="closeRuleModal()" class="text-slate-300 hover:text-rose-400"><i class="fa-solid fa-xmark text-2xl"></i></button>
+        </div>
         <form id="ruleForm" onsubmit="submitRule(event)" class="p-6 space-y-4">
             <input type="hidden" id="rule_id">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="col-span-1 md:col-span-2"><label class="block font-bold text-sm mb-1 text-navy">หมวดหมู่ *</label><input type="text" id="rule_category" required class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-navy"></div>
-                <div class="col-span-1 md:col-span-2"><label class="block font-bold text-sm mb-1 text-navy">ความผิด *</label><input type="text" id="rule_name" required class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-navy"></div>
-                <div class="col-span-1 md:col-span-2"><label class="block font-bold text-sm mb-1 text-navy">รายละเอียด</label><textarea id="rule_desc" class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-navy" rows="4"></textarea></div>
-                <div><label class="block font-bold text-sm mb-1 text-navy">ค่าปรับ</label><input type="text" id="rule_fine" required class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-navy"></div>
-                <div><label class="block font-bold text-sm mb-1 text-navy">จำคุก</label><input type="text" id="rule_jail" required class="w-full border border-slate-300 shadow-sm rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-navy"></div>
+                <div class="col-span-1 md:col-span-2"><label class="block font-bold text-sm mb-1 text-navy">หมวดหมู่ *</label><input type="text" id="rule_category" required class="w-full border rounded-lg p-2.5 text-sm bg-white" placeholder="เช่น ความผิดเกี่ยวกับทรัพย์"></div>
+                <div class="col-span-1 md:col-span-2"><label class="block font-bold text-sm mb-1 text-navy">ความผิด *</label><input type="text" id="rule_name" required class="w-full border rounded-lg p-2.5 text-sm bg-white" placeholder="เช่น ลักทรัพย์ในเวลากลางคืน"></div>
+                <div class="col-span-1 md:col-span-2"><label class="block font-bold text-sm mb-1 text-navy">รายละเอียด</label><textarea id="rule_desc" class="w-full border rounded-lg p-2.5 text-sm bg-white" rows="3" placeholder="รายละเอียดพฤติการณ์และข้อบังคับ..."></textarea></div>
+                <div><label class="block font-bold text-sm mb-1 text-navy">ค่าปรับ ($)</label><input type="text" id="rule_fine" required class="w-full border rounded-lg p-2.5 text-sm bg-white" placeholder="5000"></div>
+                <div><label class="block font-bold text-sm mb-1 text-navy">จำคุก</label><input type="text" id="rule_jail" required class="w-full border rounded-lg p-2.5 text-sm bg-white" placeholder="3 เดือน"></div>
             </div>
-            <div class="flex justify-end pt-5 mt-2 border-t border-slate-100"><button type="submit" class="bg-navy hover:bg-navy-light text-gold font-bold px-8 py-2.5 rounded-xl border border-gold shadow-md transition"><i class="fa-solid fa-save mr-2"></i> บันทึกข้อมูล</button></div>
+            <div class="flex justify-end pt-4"><button type="submit" class="bg-navy text-gold font-bold px-8 py-2.5 rounded-xl border border-gold hover:bg-navy-light transition">บันทึกข้อมูล</button></div>
         </form>
     </div>
 </div>
 
-<!-- Scripts (ทำงานร่วมกับ Vercel) -->
 <script>
+    // ==========================================
+    // REST API CLIENT & AUTHENTICATION
+    // ==========================================
+    const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+        ? (window.location.port === '18080' ? '/api/v1' : 'http://localhost:18080/api/v1')
+        : '/api/v1';
+
     let currentUser = null;
+    let accessToken = localStorage.getItem('oig_token') || null;
 
-    window.onload = () => {
-        document.getElementById('main-content').style.display = 'block';
-        
-        // เช็คว่ามี URL Parameter มาหรือไม่
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const pid = urlParams.get('pid');
-
-        if (code || pid) {
-            Swal.fire({ title: 'กำลังยืนยันตัวตน...', didOpen: () => Swal.showLoading() });
-            
-            // ลบ Params ออกจาก URL เพื่อความสะอาด
-            const cleanUrl = window.location.origin + window.location.pathname;
-            window.history.replaceState({}, document.title, cleanUrl);
-
-            let action = code ? 'verifyDiscord' : 'verifyPoliceId';
-            let payload = code ? { code: code, redirectUri: cleanUrl } : { pid: pid };
-
-            apiCall(action, payload)
-                .then(user => {
-                    if (user && user.isAuthorized) {
-                        localStorage.setItem('oig_user', JSON.stringify(user));
-                        location.reload(); 
-                    } else {
-                        Swal.fire('ข้อผิดพลาด', 'คุณไม่มีสิทธิ์เข้าถึง หรือรหัสผ่านไม่ถูกต้อง', 'error');
-                        showView('view-denied');
-                    }
-                })
-                .catch(err => {
-                    Swal.fire('ข้อผิดพลาด', err.message, 'error');
-                    showView('view-login');
-                });
-        } else {
-            // โหลดผู้ใช้จาก Local Storage
-            const savedUser = localStorage.getItem('oig_user');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                renderAuthUI();
-                switchTab('home');
-                loadPenaltyTypes();
-            } else {
-                showView('view-login');
-                // ซ่อนเมนูทั้งหมดถ้ายังไม่ได้ล็อกอิน
-                const unauthNav = document.getElementById('nav-unauth');
-                if (unauthNav) {
-                    unauthNav.classList.remove('hidden');
-                    unauthNav.style.display = 'flex';
-                }
-                const authNav = document.getElementById('nav-auth');
-                if (authNav) {
-                    authNav.classList.add('hidden');
-                    authNav.style.display = 'none';
-                }
-            }
+    async function api(path, options = {}) {
+        const headers = new Headers(options.headers || {});
+        if (accessToken) {
+            headers.set('Authorization', `Bearer ${accessToken}`);
         }
-    };
-
-    function renderAuthUI() {
-        if (currentUser && currentUser.isAuthorized) {
-            // ซ่อนปุ่ม "เข้าสู่ระบบ" ฝั่งซ้าย/กลาง ออกชัวร์ๆ 100%
-            const unauthNav = document.getElementById('nav-unauth');
-            if (unauthNav) {
-                unauthNav.classList.add('hidden');
-                unauthNav.style.display = 'none';
-            }
-            
-            // แสดงชุดเมนูของผู้ใช้ที่ล็อกอินแล้ว
-            const authNav = document.getElementById('nav-auth');
-            if (authNav) {
-                authNav.classList.remove('hidden');
-                authNav.style.display = 'flex';
-            }
-            
-            document.getElementById('nav-username').innerText = currentUser.name || "เจ้าหน้าที่";
-            document.getElementById('nav-role').innerText = currentUser.role || "N/A";
-            document.getElementById('nav-avatar').src = currentUser.avatar || "https://placehold.co/100x100?text=OIG";
-            document.getElementById('home_username').innerText = currentUser.name || "เจ้าหน้าที่";
-            
-            if (currentUser.role === 'Owner') document.getElementById('opt-screener').classList.remove('hidden');
-            if (currentUser.role === 'Admin' || currentUser.role === 'Owner') {
-                document.getElementById('btn-add-rule').classList.remove('hidden');
-                document.getElementById('th-manage').classList.remove('hidden');
-            }
-            
-            showView('view-app');
-        } else {
-            showView('view-denied');
+        if (options.body && !(options.body instanceof FormData)) {
+            headers.set('Content-Type', 'application/json');
+            options.body = JSON.stringify(options.body);
         }
+
+        const response = await fetch(`${API_BASE}${path}`, {
+            ...options,
+            headers,
+            credentials: 'include'
+        });
+
+        if (response.status === 401) {
+            accessToken = null;
+            localStorage.removeItem('oig_token');
+            showUnauthenticatedView();
+            throw new Error('Authentication required');
+        }
+
+        if (response.status === 403) {
+            const payload = await response.json().catch(() => null);
+            const err = new Error(payload?.message || 'Permission denied');
+            err.status = 403;
+            throw err;
+        }
+
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+            const error = new Error(payload?.message || `HTTP ${response.status}`);
+            error.status = response.status;
+            error.code = payload?.error?.code;
+            error.details = payload?.error?.details || [];
+            throw error;
+        }
+        return payload ? payload.data : null;
     }
 
-    function showView(viewId) {
-        ['view-login', 'view-denied', 'view-app'].forEach(v => {
-            document.getElementById(v).classList.add('hidden');
-        });
-        document.getElementById(viewId).classList.remove('hidden');
+    function escapeHtml(unsafe) {
+        if (unsafe == null) return '';
+        return String(unsafe)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function formatBangkokDate(dateStr) {
+        if (!dateStr) return '-';
+        try {
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', dateStyle: 'short', timeStyle: 'short' });
+        } catch (e) {
+            return dateStr;
+        }
     }
 
     function loginDiscord() {
-        const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
-        window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=identify`;
+        const returnTo = window.location.href.split('?')[0];
+        window.location.href = `${API_BASE}/auth/discord/login?return_to=${encodeURIComponent(returnTo)}`;
     }
 
-    function loginWithPoliceId() {
-        const pid = document.getElementById('login_police_id').value.trim();
-        if (!pid) return Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัสประจำตัว', 'warning');
-        window.location.href = window.location.origin + window.location.pathname + "?pid=" + encodeURIComponent(pid);
-    }
-
-    function logout() {
+    function handlePoliceIdNotice() {
         Swal.fire({
-            title: 'ออกจากระบบ?', text: "คุณต้องการออกจากระบบใช่หรือไม่", icon: 'question',
-            showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ออกจากระบบ'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                localStorage.removeItem('oig_user');
-                location.reload();
-            }
+            title: 'การเข้าสู่ระบบ',
+            text: 'ระบบความปลอดภัย OIG ใช้การยืนยันตัวตนผ่าน Discord OAuth2 เพื่อปกป้องฐานข้อมูล กรุณากดปุ่ม "ล็อกอินด้วย Discord" ด้านล่าง',
+            icon: 'info',
+            confirmButtonColor: '#5865F2',
+            confirmButtonText: 'ล็อกอินด้วย Discord'
+        }).then(res => {
+            if (res.isConfirmed) loginDiscord();
         });
     }
 
+    async function logout() {
+        const result = await Swal.fire({
+            title: 'ออกจากระบบ?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'ออกจากระบบ',
+            cancelButtonText: 'ยกเลิก'
+        });
+        if (result.isConfirmed) {
+            try {
+                await api('/auth/logout', { method: 'POST' });
+            } catch (e) {
+                console.warn('Logout server notification:', e);
+            }
+            accessToken = null;
+            localStorage.removeItem('oig_token');
+            currentUser = null;
+            showUnauthenticatedView();
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ออกจากระบบเรียบร้อยแล้ว', showConfirmButton: false, timer: 1500 });
+        }
+    }
+
+    function showUnauthenticatedView(errorMsg = '') {
+        document.getElementById('nav-authenticated').classList.add('hidden');
+        document.getElementById('nav-unauthenticated').classList.remove('hidden');
+        document.getElementById('view-auth').classList.add('hidden');
+        document.getElementById('view-denied').classList.add('hidden');
+        document.getElementById('view-unauth').classList.remove('hidden');
+
+        if (errorMsg) {
+            document.getElementById('login-error-msg').innerText = errorMsg;
+            document.getElementById('login-error-alert').classList.remove('hidden');
+        } else {
+            document.getElementById('login-error-alert').classList.add('hidden');
+        }
+    }
+
+    function showAccessDeniedView(discordId) {
+        document.getElementById('nav-authenticated').classList.add('hidden');
+        document.getElementById('nav-unauthenticated').classList.remove('hidden');
+        document.getElementById('view-auth').classList.add('hidden');
+        document.getElementById('view-unauth').classList.add('hidden');
+        document.getElementById('view-denied').classList.remove('hidden');
+        document.getElementById('denied-discord-id').innerText = discordId || 'Unknown';
+    }
+
+    function showAuthenticatedView(user) {
+        currentUser = user;
+        document.getElementById('nav-unauthenticated').classList.add('hidden');
+        document.getElementById('view-unauth').classList.add('hidden');
+        document.getElementById('view-denied').classList.add('hidden');
+        document.getElementById('nav-authenticated').classList.remove('hidden');
+        document.getElementById('view-auth').classList.remove('hidden');
+
+        // Set user badge
+        document.getElementById('nav-user-name').innerText = user.name || 'User';
+        document.getElementById('nav-user-role').innerText = user.role || 'Guest';
+        if (user.avatar) {
+            document.getElementById('nav-user-avatar').src = user.avatar;
+        }
+        document.getElementById('home-username').innerText = user.name || 'User';
+
+        // Apply RBAC UI controls visibility
+        const isPrivileged = user.role === 'Admin' || user.role === 'Owner';
+        const isScreenerOrAbove = isPrivileged || user.role === 'Screener';
+
+        const rulebookBtn = document.getElementById('rulebook-admin-actions');
+        if (rulebookBtn) rulebookBtn.style.display = isPrivileged ? 'block' : 'none';
+
+        const deleteMemberBtn = document.getElementById('btn-delete-member');
+        if (deleteMemberBtn) deleteMemberBtn.style.display = isPrivileged ? 'inline-flex' : 'none';
+
+        const roleUpdateControls = document.getElementById('role-update-controls');
+        if (roleUpdateControls) roleUpdateControls.style.display = isScreenerOrAbove ? 'flex' : 'none';
+
+        const penaltyTypeControls = document.getElementById('penalty-type-controls');
+        if (penaltyTypeControls) penaltyTypeControls.style.display = isPrivileged ? 'flex' : 'none';
+
+        switchTab('home');
+    }
+
+    async function initAuth() {
+        // 1. Check for token in URL query params if returning from redirect
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('token')) {
+            accessToken = urlParams.get('token');
+            localStorage.setItem('oig_token', accessToken);
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // 2. Fetch current user from /auth/me
+        try {
+            const user = await api('/auth/me');
+            if (user && user.role) {
+                showAuthenticatedView(user);
+            } else {
+                showUnauthenticatedView();
+            }
+        } catch (err) {
+            if (err.status === 403) {
+                showAccessDeniedView(err.details?.discordId || '');
+            } else {
+                showUnauthenticatedView();
+            }
+        }
+    }
+
     // ==========================================
-    // UI TAB LOGIC
+    // CLIENT CACHE & APP STATE
+    // ==========================================
+    const OIG_CACHE = {
+        department: null,
+        penaltyTypes: null,
+        users: null,
+        auditLogs: null,
+        rulebook: null
+    };
+
+    let rosterRequestSeq = 0;
+    let profileRequestSeq = 0;
+    let lastRosterSearchKey = '';
+    let rosterNeedsRefresh = true;
+    let checkPoliceIdTimer = null;
+    let globalRuleData = [];
+    let currentProfileMember = null;
+
+    function invalidateRosterCache() {
+        rosterNeedsRefresh = true;
+        lastRosterSearchKey = '';
+    }
+
+    function invalidateCache(name) {
+        if (Object.prototype.hasOwnProperty.call(OIG_CACHE, name)) OIG_CACHE[name] = null;
+    }
+
+    function handleLoadError(error, targetId) {
+        console.error('Data load error:', error);
+        const target = targetId ? document.getElementById(targetId) : null;
+        if (target) {
+            target.innerHTML = `<div class="text-center py-8 text-rose-600 text-sm font-bold">ไม่สามารถโหลดข้อมูลได้: ${escapeHtml(error.message)}</div>`;
+        }
+    }
+
+    // ==========================================
+    // TAB SWITCHING
     // ==========================================
     function switchTab(tab) {
-        ['tab-home', 'tab-roster', 'tab-add-member', 'tab-penalty', 'tab-roles', 'tab-rulebook'].forEach(t => document.getElementById(t).classList.add('hidden'));
-        ['nav-home', 'nav-roster', 'nav-penalty', 'nav-roles', 'nav-rulebook'].forEach(n => {
-            const el = document.getElementById(n); if(el) el.className = "px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-gold transition";
-        });
-        document.getElementById(`tab-${tab}`).classList.remove('hidden');
-        const tNav = document.getElementById(`nav-${tab}`); if(tNav) tNav.className = "px-3 py-2 rounded-md text-sm font-medium text-gold border-b-2 border-gold transition";
+        const tabs = ['tab-home', 'tab-roster', 'tab-add-member', 'tab-penalty', 'tab-roles', 'tab-rulebook'];
+        const navs = ['nav-home', 'nav-roster', 'nav-add-member', 'nav-penalty', 'nav-roles', 'nav-rulebook'];
+        const normalNav = 'px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-gold transition';
+        const activeNav = 'px-3 py-2 rounded-md text-sm font-medium text-gold border-b-2 border-gold transition';
 
-        if(tab === 'roster') { searchRoster(); } 
-        else if (tab === 'roles') { loadRoles(); loadAuditLogs(); loadPenaltyTypes(); } 
-        else if (tab === 'rulebook') { loadRulebook(); }
+        tabs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden', id !== `tab-${tab}`);
+        });
+        navs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.className = id === `nav-${tab}` ? activeNav : normalNav;
+        });
+
+        if (tab === 'roster') {
+            loadDepartmentFilterOptions();
+            if (rosterNeedsRefresh) searchRoster(true);
+        } else if (tab === 'penalty') {
+            loadPenaltyTypes();
+        } else if (tab === 'roles') {
+            loadRoles();
+            loadAuditLogs();
+            loadPenaltyTypes();
+        } else if (tab === 'rulebook') {
+            loadRulebook();
+        }
     }
 
     // ==========================================
-    // REST OF APP LOGIC
+    // TAB 1: ROSTER & SEARCH
     // ==========================================
-    function searchRoster() {
-        const query = document.getElementById('rosterSearchInput').value.trim();
-        const empFilter = document.getElementById('filterEmployment').value;
-        const discFilter = document.getElementById('filterDiscipline').value;
-        
-        document.getElementById('roster-container').innerHTML = `<div class="text-center py-16"><i class="fa-solid fa-circle-notch fa-spin text-5xl text-gold"></i></div>`;
-        apiCall('getPoliceRoster', { params: { query, empFilter, discFilter } }).then(renderRoster).catch(e => Swal.fire('Error', e.message, 'error'));
+    async function loadDepartmentFilterOptions(force = false) {
+        const sel = document.getElementById('filterDepartment');
+        if (!sel) return;
+
+        if (!force && Array.isArray(OIG_CACHE.department)) {
+            renderDepartmentOptions(OIG_CACHE.department);
+            return;
+        }
+
+        try {
+            const res = await api('/metadata/departments');
+            const list = Array.isArray(res?.items) ? res.items : (Array.isArray(res) ? res : []);
+            OIG_CACHE.department = list;
+            renderDepartmentOptions(list);
+        } catch (err) {
+            console.warn('Could not load departments:', err);
+        }
+    }
+
+    function renderDepartmentOptions(list) {
+        const sel = document.getElementById('filterDepartment');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">สังกัดทั้งหมด</option>' +
+            list.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+    }
+
+    function showPromptToSearch() {
+        document.getElementById('roster-container').innerHTML = `
+            <div class="text-center py-16 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                <i class="fa-solid fa-keyboard text-5xl text-slate-300 mb-4"></i>
+                <p class="text-navy font-bold text-lg">ระบุข้อมูลที่ต้องการค้นหา</p>
+                <p class="text-slate-500 text-sm">พิมพ์คีย์เวิร์ด หรือเลือกตัวกรองด้านบน</p>
+            </div>
+        `;
+    }
+
+    function searchRoster(force = false) {
+        const input = id => document.getElementById(id);
+        const params = {
+            query: input('rosterSearchInput')?.value.trim() || '',
+            empFilter: input('filterEmployment')?.value || '',
+            discFilter: input('filterDiscipline')?.value || '',
+            deptFilter: input('filterDepartment')?.value || '',
+            genRangeFilter: input('filterGenRange')?.value || ''
+        };
+
+        const isEmpty = Object.values(params).every(v => v === '');
+        if (isEmpty) {
+            showPromptToSearch();
+            rosterNeedsRefresh = false;
+            lastRosterSearchKey = '';
+            return;
+        }
+
+        loadRoster(params, force);
+    }
+
+    async function loadRoster(params, force = false) {
+        const searchKey = JSON.stringify(params);
+        if (!force && !rosterNeedsRefresh && searchKey === lastRosterSearchKey) return;
+
+        const requestId = ++rosterRequestSeq;
+        const container = document.getElementById('roster-container');
+        if (!container) return;
+
+        container.innerHTML = `<div class="text-center py-16 bg-white rounded-2xl shadow-sm border border-slate-200"><i class="fa-solid fa-circle-notch fa-spin text-5xl text-gold"></i><p class="mt-4 text-navy font-bold text-lg">กำลังประมวลผลการค้นหา...</p></div>`;
+        lastRosterSearchKey = searchKey;
+        rosterNeedsRefresh = false;
+
+        try {
+            const queryParams = new URLSearchParams({
+                query: params.query,
+                empFilter: params.empFilter,
+                discFilter: params.discFilter,
+                deptFilter: params.deptFilter,
+                genRangeFilter: params.genRangeFilter,
+                page: '1',
+                limit: '500'
+            });
+            const data = await api(`/members?${queryParams.toString()}`);
+            if (requestId !== rosterRequestSeq) return;
+            renderRoster(data);
+        } catch (err) {
+            if (requestId !== rosterRequestSeq) return;
+            handleLoadError(err, 'roster-container');
+        }
     }
 
     function renderRoster(data) {
-        const container = document.getElementById('roster-container'); container.innerHTML = '';
-        const generations = Object.keys(data).sort((a, b) => parseInt(a) - parseInt(b));
-        if(generations.length === 0) { container.innerHTML = `<div class="text-center py-10 bg-white rounded-xl border border-slate-200">ไม่พบข้อมูล</div>`; return; }
+        const container = document.getElementById('roster-container');
+        if (!container) return;
 
-        generations.forEach(gen => {
-            let html = `<div class="bg-white border border-slate-200 rounded-2xl shadow-sm mb-6 overflow-hidden"><div class="bg-navy px-5 py-3 text-white font-bold">รุ่นที่ ${gen}</div><ul class="divide-y divide-slate-100">`;
-            data[gen].forEach(member => {
+        const grouped = data?.groupedByGeneration || {};
+        const generations = Object.keys(grouped).sort((a, b) => parseInt(a) - parseInt(b));
+
+        if (generations.length === 0) {
+            container.innerHTML = `<div class="text-center py-16 bg-white rounded-xl border border-slate-200"><p class="text-navy font-bold">ไม่พบรายชื่อที่ตรงกับตัวกรองของคุณ</p></div>`;
+            return;
+        }
+
+        container.innerHTML = generations.map(gen => {
+            const members = Array.isArray(grouped[gen]) ? grouped[gen] : [];
+            const rows = members.map(member => {
+                let bgClass = 'bg-white border-l-4 border-slate-300 text-slate-800';
                 let badge = '<span class="bg-slate-100 text-slate-500 text-xs px-2 py-0.5 rounded border border-slate-200">ปกติ</span>';
-                if (member.empStatus === 'ปลดราชการ') badge = '<span class="bg-[#4e342e] text-white text-xs px-2 py-0.5 rounded shadow-sm">ปลดราชการ</span>';
-                else if (member.penaltyCount >= 3) badge = `<span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded shadow-sm">ใบแดง (${member.penaltyCount})</span>`;
-                else if (member.penaltyCount == 2) badge = '<span class="bg-orange-500 text-white text-xs px-2 py-0.5 rounded shadow-sm">ใบส้ม (2)</span>';
-                else if (member.penaltyCount == 1) badge = '<span class="bg-yellow-400 text-yellow-900 font-bold text-xs px-2 py-0.5 rounded shadow-sm">ใบเหลือง (1)</span>';
 
-                html += `<li onclick="openProfileModal('${member.policeId}')" class="flex justify-between p-4 hover:bg-slate-50 cursor-pointer transition"><div><span class="font-bold text-navy">${member.fullName}</span> <span class="ml-2">${badge}</span></div><div class="font-mono text-xs text-slate-400">ID: ${member.policeId}</div></li>`;
-            });
-            html += `</ul></div>`; container.innerHTML += html;
-        });
+                if (member.employmentStatus === 'ปลดราชการ') {
+                    bgClass = 'bg-[#4e342e] text-white border-l-4 border-[#3e2723]';
+                    badge = '<span class="bg-white/20 text-white text-xs px-2 py-0.5 rounded shadow-sm">ปลดราชการ</span>';
+                } else if (member.employmentStatus === 'พักราชการ') {
+                    bgClass = 'bg-purple-50 border-l-4 border-purple-600 text-purple-900';
+                    badge = '<span class="bg-purple-600 text-white text-xs px-2.5 py-0.5 rounded shadow-sm font-bold"><i class="fa-solid fa-user-clock mr-1"></i>พักราชการ</span>';
+                } else if (member.penaltyCount >= 3) {
+                    bgClass = 'bg-red-50 border-l-4 border-red-500 text-red-900';
+                    badge = `<span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded shadow-sm">ใบแดง (${member.penaltyCount})</span>`;
+                } else if (member.penaltyCount === 2) {
+                    bgClass = 'bg-orange-50 border-l-4 border-orange-500 text-orange-900';
+                    badge = '<span class="bg-orange-500 text-white text-xs px-2 py-0.5 rounded shadow-sm">ใบส้ม (2)</span>';
+                } else if (member.penaltyCount === 1) {
+                    bgClass = 'bg-yellow-50 border-l-4 border-yellow-400 text-yellow-900';
+                    badge = '<span class="bg-yellow-400 text-yellow-900 font-bold text-xs px-2 py-0.5 rounded shadow-sm">ใบเหลือง (1)</span>';
+                }
+
+                const deptBadge = member.department && member.department !== '-'
+                    ? `<span class="bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-medium px-2 py-0.5 rounded-md"><i class="fa-solid fa-building mr-1"></i>${escapeHtml(member.department)}</span>`
+                    : '';
+                const unitBadgesHtml = member.unit && member.unit !== '-'
+                    ? member.unit.split(/[,\/]+/).map(u => u.trim()).filter(Boolean).map(u =>
+                        `<span class="bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-medium px-2 py-0.5 rounded-md"><i class="fa-solid fa-shield-halved mr-1"></i>${escapeHtml(u)}</span>`
+                    ).join('')
+                    : '';
+
+                return `<li onclick="openProfileModal('${escapeHtml(member.policeId)}')" class="${bgClass} flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 cursor-pointer hover:opacity-80 transition gap-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <span class="font-bold text-base">${escapeHtml(member.fullName)}</span>
+                        <div class="flex flex-wrap gap-1.5 items-center">${badge}${deptBadge}${unitBadgesHtml}</div>
+                    </div>
+                    <div class="font-mono text-xs opacity-70 shrink-0">ID: ${escapeHtml(member.policeId)}</div>
+                </li>`;
+            }).join('');
+
+            return `<div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-6">
+                <div class="bg-navy px-5 py-3 border-b border-gold text-white font-bold">รุ่นที่ ${escapeHtml(gen)}</div>
+                <ul class="divide-y divide-slate-100">${rows}</ul>
+            </div>`;
+        }).join('');
     }
 
-    function openProfileModal(policeId) {
-        document.getElementById('profileModal').classList.replace('hidden', 'flex');
+    // ==========================================
+    // PROFILE MODAL
+    // ==========================================
+    async function openProfileModal(policeId) {
+        const modal = document.getElementById('profileModal');
+        if (!modal) return;
+
+        modal.classList.replace('hidden', 'flex');
         document.getElementById('profileLoading').classList.remove('hidden');
         document.getElementById('profileContent').classList.add('hidden');
-        apiCall('getMemberProfile', { policeId }).then(renderProfile).catch(e => Swal.fire('Error', e.message, 'error'));
+        document.getElementById('retireSection').classList.add('hidden');
+
+        const requestId = ++profileRequestSeq;
+        try {
+            const summary = await api(`/members/by-police-id/${encodeURIComponent(policeId)}/summary`);
+            if (requestId !== profileRequestSeq) return;
+
+            // Also fetch member detail to get nameHistory
+            let nameHistory = [];
+            if (summary.info?.id) {
+                try {
+                    const detail = await api(`/members/${summary.info.id}`);
+                    nameHistory = detail?.nameHistory || [];
+                } catch (e) {
+                    console.warn('Could not load name history:', e);
+                }
+            }
+
+            renderProfile(summary, nameHistory);
+        } catch (err) {
+            if (requestId !== profileRequestSeq) return;
+            document.getElementById('profileLoading').innerHTML = `<p class="text-rose-600 font-bold text-sm">ไม่สามารถโหลดแฟ้มประวัติได้: ${escapeHtml(err.message)}</p>`;
+        }
     }
 
-    function renderProfile(data) {
+    function closeProfileModal() {
+        document.getElementById('profileModal').classList.replace('flex', 'hidden');
+    }
+
+    function renderProfile(summary, nameHistory) {
         document.getElementById('profileLoading').classList.add('hidden');
         document.getElementById('profileContent').classList.remove('hidden');
-        document.getElementById('p_id').innerText = data.info.policeId;
-        document.getElementById('p_gen').innerText = data.info.gen;
-        document.getElementById('p_name').innerText = data.info.fullName;
-        document.getElementById('p_status').innerText = `${data.info.penaltyCount} ใบเหลือง`;
         
-        const pDiv = document.getElementById('p_penalties'); pDiv.innerHTML = '';
-        if(data.penalties.length === 0) pDiv.innerHTML = '<p class="text-xs text-slate-400 italic">ไม่มีข้อมูลพฤติการณ์</p>';
-        data.penalties.forEach(p => { 
-            pDiv.innerHTML += `<div class="border border-rose-200 rounded-lg p-3 text-sm bg-rose-50 mb-2 shadow-sm"><div class="font-bold text-rose-700">${p.action} <span class="text-xs font-normal opacity-70 ml-2">(${p.startDate} - ${p.expiryDate})</span></div><div class="text-slate-600 mt-1">${p.reason}</div><div class="mt-2 text-xs"><a href="${p.imageUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 underline transition">ดูหลักฐาน</a></div></div>`; 
-        });
+        const info = summary.info;
+        currentProfileMember = info;
+
+        document.getElementById('p_id').innerText = info.policeId;
+        document.getElementById('p_gen').innerText = info.generation;
+        document.getElementById('p_dept').innerText = info.department || '-';
+        document.getElementById('p_unit').innerText = info.unit || '-';
+        
+        let empStatusBadge = '<span class="text-emerald-600 font-bold text-xs ml-2 border border-emerald-500 px-2 py-0.5 rounded bg-emerald-50 shadow-sm">[รับราชการอยู่]</span>';
+        if (info.employmentStatus === 'ปลดราชการ') {
+            empStatusBadge = '<span class="text-rose-600 font-bold text-xs ml-2 border border-rose-500 px-2 py-0.5 rounded bg-rose-50 shadow-sm">[ปลดราชการ]</span>';
+        } else if (info.employmentStatus === 'พักราชการ') {
+            empStatusBadge = '<span class="text-purple-600 font-bold text-xs ml-2 border border-purple-500 px-2 py-0.5 rounded bg-purple-50 shadow-sm">[พักราชการ]</span>';
+        }
+
+        document.getElementById('p_name').innerHTML = `${escapeHtml(info.fullName)} ${empStatusBadge}`;
+        document.getElementById('p_status').innerHTML = `<span class="text-navy font-bold">${info.penaltyCount} ใบเหลือง</span>`;
+        
+        // Populate edit form
+        document.getElementById('e_member_id').value = info.id;
+        document.getElementById('e_id').value = info.policeId;
+        document.getElementById('e_gen').value = info.generation;
+        document.getElementById('e_status').value = info.employmentStatus || 'รับราชการ';
+        document.getElementById('e_dept').value = info.department || '-';
+        document.getElementById('e_unit').value = info.unit || '';
+        document.getElementById('e_rank').value = info.rank || 'ไม่ระบุ';
+        document.getElementById('e_medPrefix').value = info.medicalPrefix || '';
+        document.getElementById('e_nameOnly').value = info.fullName || '';
+
+        // Retire / Unretire section
+        const rSection = document.getElementById('retireSection'); 
+        rSection.classList.remove('hidden');
+        const btnRetire = document.getElementById('btn_retire'); 
+        const btnUnretire = document.getElementById('btn_unretire');
+        
+        if (info.employmentStatus === 'ปลดราชการ') { 
+            btnRetire.classList.add('hidden'); 
+            btnUnretire.classList.remove('hidden'); 
+        } else { 
+            btnRetire.classList.remove('hidden'); 
+            btnUnretire.classList.add('hidden'); 
+        }
+
+        // Render penalties list
+        const penalties = Array.isArray(summary.penalties) ? summary.penalties : [];
+        const pDiv = document.getElementById('p_penalties');
+        const canPardon = currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Owner');
+
+        pDiv.innerHTML = penalties.length ? penalties.map(p => {
+            let pardonBadge = '';
+            let pardonBtn = '';
+            let boxStyle = 'border-rose-200 bg-rose-50';
+            let titleStyle = 'text-rose-700';
+            let textStyle = 'text-slate-600';
+
+            const isPardoned = !!p.pardonedAt;
+            const actionText = p.actionTypes ? p.actionTypes.join(', ') : (p.action || 'บทลงโทษ');
+            const startDateStr = p.startDate ? formatBangkokDate(p.startDate) : '-';
+            const expiryDateStr = p.isPermanent ? 'ถาวร' : (p.expiryDate ? formatBangkokDate(p.expiryDate) : '-');
+
+            if (isPardoned) {
+                boxStyle = 'border-emerald-300 bg-emerald-50/60 opacity-85';
+                titleStyle = 'text-emerald-800 line-through';
+                textStyle = 'text-slate-500 line-through';
+                pardonBadge = `<span class="ml-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-hand-holding-heart mr-1"></i>อภัยโทษแล้ว</span>`;
+            } else if (canPardon) {
+                pardonBtn = `<button onclick="promptPardon('${escapeHtml(p.id)}', '${escapeHtml(info.policeId)}')" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-md shadow-sm transition shrink-0"><i class="fa-solid fa-hand-holding-heart mr-1"></i> อภัยโทษ</button>`;
+            }
+
+            const evidenceLink = p.evidenceUrl 
+                ? `<div class="mt-2 text-xs"><a href="${p.evidenceUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 underline transition"><i class="fa-solid fa-image"></i> ดูรูปภาพหลักฐาน</a></div>`
+                : '';
+
+            return `<div class="border ${boxStyle} rounded-lg p-3 text-sm shadow-sm transition">
+                <div class="flex justify-between items-start gap-2 mb-1">
+                    <div class="font-bold ${titleStyle}">
+                        ${escapeHtml(actionText)}
+                        <span class="text-xs font-normal opacity-70 ml-2">(${startDateStr} ถึง ${expiryDateStr})</span>
+                        ${pardonBadge}
+                    </div>
+                    ${pardonBtn}
+                </div>
+                <div class="${textStyle} leading-relaxed">${escapeHtml(p.reason)}</div>
+                ${evidenceLink}
+            </div>`;
+        }).join('') : '<p class="text-xs text-slate-400 italic">ประวัติขาวสะอาด ไม่มีข้อมูลพฤติการณ์</p>';
+
+        // Render name history
+        const nDiv = document.getElementById('p_names');
+        nDiv.innerHTML = nameHistory.length ? nameHistory.map(n => `
+            <li class="border-b border-slate-100 pb-1 mb-1 leading-relaxed">
+                <span class="text-xs text-slate-400">[${formatBangkokDate(n.changedAt)}]</span>
+                จาก <span class="font-semibold text-slate-600">${escapeHtml(n.oldName || '-')}</span>
+                เปลี่ยนเป็น: <span class="font-bold text-navy">${escapeHtml(n.newName)}</span>
+            </li>`).join('') : '<li class="text-xs text-slate-400 italic">ไม่มีประวัติเปลี่ยนชื่อ</li>';
     }
 
-    function loadPenaltyTypes() {
-        apiCall('getPenaltyTypes').then(r => {
-            const t = document.getElementById('penaltyTypesTable'); if(t) t.innerHTML = '';
-            const sel = document.getElementById('pen_action_type'); if(sel) sel.innerHTML = '<option value="" disabled selected>กรุณาเลือก...</option>';
-            r.forEach(p => {
-                if(t) t.innerHTML += `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="p-3 font-bold text-navy">${p.name}</td><td class="p-3 text-right"><button onclick="deletePenaltyType('${p.id}')" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg transition" title="ลบ"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
-                if(sel) sel.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-            });
-        }).catch(e => console.error(e));
-    }
-    
-    function addPenaltyType() {
-        const name = document.getElementById('new_penalty_type_name').value.trim();
-        if(!name) return; Swal.fire({ title: 'บันทึก...', didOpen: () => Swal.showLoading() });
-        apiCall('savePenaltyType', { name, updaterId: currentUser.id }).then(() => { Swal.fire({toast:true, position:'top-end', icon:'success', title:'เพิ่มสำเร็จ', showConfirmButton:false, timer:1500}); document.getElementById('new_penalty_type_name').value=''; loadPenaltyTypes(); }).catch(e => Swal.fire('Error', e.message, 'error'));
-    }
-
-    function deletePenaltyType(id) {
-        Swal.fire({ title: 'ลบประเภทการลงโทษ?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((res) => {
-            if(res.isConfirmed) {
-                Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() });
-                apiCall('deletePenaltyType', { id, updaterId: currentUser.id }).then(loadPenaltyTypes).catch(e => Swal.fire('Error', e.message, 'error'));
+    async function promptPardon(penaltyId, policeId) {
+        const res = await Swal.fire({
+            title: 'อภัยโทษในรายการนี้?',
+            text: 'การอภัยโทษจะลบผลการลงโทษออกจากจำนวนใบเหลืองค้างสะสม แต่ยังบันทึกประวัติไว้ในระบบ',
+            input: 'textarea',
+            inputPlaceholder: 'กรอกรายละเอียด / เหตุผลการอภัยโทษ...',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#0B1E36',
+            confirmButtonText: 'ยืนยันการอภัยโทษ',
+            cancelButtonText: 'ยกเลิก',
+            inputValidator: (value) => {
+                if (!value || !value.trim()) {
+                    return 'กรุณากรอกเหตุผลการอภัยโทษด้วยครับ!';
+                }
             }
         });
+
+        if (res.isConfirmed) {
+            Swal.fire({ title: 'กำลังดำเนินการอภัยโทษ...', didOpen: () => Swal.showLoading() });
+            try {
+                await api(`/penalties/${penaltyId}/pardon`, {
+                    method: 'POST',
+                    body: { reason: res.value.trim() }
+                });
+                openProfileModal(policeId);
+                invalidateRosterCache();
+                searchRoster(true);
+                Swal.fire('สำเร็จ', 'ทำการอภัยโทษเรียบร้อยแล้ว', 'success');
+            } catch (err) {
+                Swal.fire('ผิดพลาด', err.message, 'error');
+            }
+        }
     }
 
-    let globalRuleData = [];
+    function toggleEditProfile() {
+        document.getElementById('displayProfileView').classList.add('hidden');
+        document.getElementById('editProfileForm').classList.remove('hidden');
+    }
     
-    function formatFine(val) { return (!val || val == '0') ? '-' : (!isNaN(val) ? '$' + Number(val).toLocaleString() : val); }
-    function formatJail(val) { return (!val || val == '0') ? '-' : (!isNaN(val) ? val + ' เดือน' : val); }
+    async function saveProfileEdit(e) {
+        e.preventDefault();
+        const memberId = document.getElementById('e_member_id').value;
+        const medPrefix = document.getElementById('e_medPrefix').value;
+        const rank = document.getElementById('e_rank').value;
+        const rawName = document.getElementById('e_nameOnly').value.trim();
+        const gen = parseInt(document.getElementById('e_gen').value, 10);
+        const empStatus = document.getElementById('e_status').value;
+        const dept = document.getElementById('e_dept').value.trim();
+        const unit = document.getElementById('e_unit').value.trim();
 
-    function loadRulebook() {
-        document.getElementById('rulebook-container').innerHTML = '<tr><td colspan="6" class="text-center py-10"><i class="fa-solid fa-spinner fa-spin text-3xl text-navy"></i></td></tr>';
-        apiCall('getPenaltyCatalog').then(data => {
-            globalRuleData = data;
-            const tbody = document.getElementById('rulebook-container'); tbody.innerHTML = '';
-            if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-slate-500 font-bold">ไม่มีข้อมูลบทลงโทษ</td></tr>'; return; }
-            
-            data.forEach(r => {
-                let actions = '';
-                if (currentUser.role === 'Admin' || currentUser.role === 'Owner') {
-                    actions = `<button onclick="editRule('${r.id}')" class="text-blue-600 hover:bg-blue-50 p-2 rounded-lg border border-transparent hover:border-blue-200 transition mr-1" title="แก้ไข"><i class="fa-solid fa-pen"></i></button><button onclick="deleteRule('${r.id}')" class="text-rose-600 hover:bg-rose-50 p-2 rounded-lg border border-transparent hover:border-rose-200 transition" title="ลบ"><i class="fa-solid fa-trash-can"></i></button>`;
+        Swal.fire({ title: 'กำลังบันทึกข้อมูล...', didOpen: () => Swal.showLoading() });
+        try {
+            await api(`/members/${memberId}`, {
+                method: 'PATCH',
+                body: {
+                    generation: gen,
+                    rank: rank !== 'ไม่ระบุ' ? rank : '',
+                    medicalPrefix: medPrefix,
+                    fullName: rawName,
+                    department: dept,
+                    unit: unit
                 }
-                tbody.innerHTML += `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="p-4 align-top font-bold text-navy whitespace-nowrap">${r.category}</td><td class="p-4 align-top font-semibold text-slate-800">${r.name}</td><td class="p-4 align-top whitespace-pre-wrap text-xs text-slate-600 leading-relaxed">${r.description||'-'}</td><td class="p-4 align-top text-right text-emerald-600 font-bold whitespace-nowrap">${formatFine(r.fine)}</td><td class="p-4 align-top text-right text-rose-600 font-bold whitespace-nowrap">${formatJail(r.jail)}</td>${(currentUser.role === 'Admin' || currentUser.role === 'Owner') ? `<td class="p-4 align-top text-center whitespace-nowrap">${actions}</td>` : ''}</tr>`;
+            });
+
+            // Update status if changed
+            if (currentProfileMember && currentProfileMember.employmentStatus !== empStatus) {
+                await api(`/members/${memberId}/status`, {
+                    method: 'PATCH',
+                    body: { employmentStatus: empStatus }
+                });
+            }
+
+            closeProfileModal();
+            invalidateRosterCache();
+            invalidateCache('department');
+            searchRoster(true);
+            loadDepartmentFilterOptions(true);
+            Swal.fire('สำเร็จ', 'อัปเดตข้อมูลประวัติเรียบร้อย', 'success');
+        } catch (err) {
+            Swal.fire('ผิดพลาด', err.message, 'error');
+        }
+    }
+
+    async function confirmDeleteMember() {
+        if (!currentProfileMember) return;
+        const pid = currentProfileMember.policeId;
+        const name = currentProfileMember.fullName;
+        const memberId = currentProfileMember.id;
+        
+        const res = await Swal.fire({
+            title: 'ยืนยันการลบข้อมูล?',
+            text: `คุณกำลังจะลบข้อมูลของ "${name}" (ID: ${pid}) ออกจากระบบ!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#0B1E36',
+            confirmButtonText: 'ใช่, ลบรายชื่อ',
+            cancelButtonText: 'ยกเลิก'
+        });
+
+        if (res.isConfirmed) {
+            Swal.fire({ title: 'กำลังลบข้อมูล...', didOpen: () => Swal.showLoading() });
+            try {
+                await api(`/members/${memberId}`, { method: 'DELETE' });
+                closeProfileModal();
+                invalidateRosterCache();
+                searchRoster(true);
+                loadDepartmentFilterOptions(true);
+                Swal.fire('สำเร็จ', 'ลบรายชื่อเรียบร้อยแล้ว', 'success');
+            } catch (err) {
+                Swal.fire('ผิดพลาด', err.message, 'error');
+            }
+        }
+    }
+
+    async function updateRetireStatus(status) {
+        if (!currentProfileMember) return;
+        const pid = currentProfileMember.policeId;
+        const memberId = currentProfileMember.id;
+        const actionText = status === 'รับราชการ' ? 'ยกเลิกปลดราชการ (ดึงกลับสู่ระบบ)' : 'ทำการปลดราชการ';
+        
+        const res = await Swal.fire({ 
+            title: 'ยืนยันการทำรายการ?', 
+            text: `คุณต้องการ ${actionText} ใช่หรือไม่`, 
+            icon: 'warning', 
+            showCancelButton: true,
+            confirmButtonColor: status === 'รับราชการ' ? '#10b981' : '#d33',
+            confirmButtonText: 'ยืนยัน',
+            cancelButtonText: 'ยกเลิก'
+        });
+
+        if (res.isConfirmed) { 
+            Swal.fire({ title: 'กำลังบันทึกข้อมูล...', didOpen: () => Swal.showLoading() });
+            try {
+                await api(`/members/${memberId}/status`, {
+                    method: 'PATCH',
+                    body: { employmentStatus: status }
+                });
+                closeProfileModal(); 
+                invalidateRosterCache();
+                searchRoster(true); 
+                Swal.fire('สำเร็จ', 'ปรับสถานะเรียบร้อยแล้ว', 'success');
+            } catch (err) {
+                Swal.fire('ผิดพลาด', err.message, 'error');
+            }
+        }
+    }
+
+    // ==========================================
+    // TAB 3: PENALTY SYSTEM
+    // ==========================================
+    function checkPoliceIdPreview() {
+        clearTimeout(checkPoliceIdTimer);
+        const pid = document.getElementById('pen_police_id').value.trim();
+        const previewDiv = document.getElementById('pen_user_preview');
+
+        if (!pid) {
+            previewDiv.classList.add('hidden');
+            previewDiv.innerHTML = '';
+            return;
+        }
+
+        previewDiv.classList.remove('hidden');
+        previewDiv.innerHTML = '<div class="p-3 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-500 font-bold flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-navy"></i> กำลังตรวจสอบข้อมูลรหัส...</div>';
+
+        checkPoliceIdTimer = setTimeout(async () => {
+            const currentInputPid = document.getElementById('pen_police_id').value.trim();
+            if (pid !== currentInputPid) return;
+
+            try {
+                const summary = await api(`/members/by-police-id/${encodeURIComponent(pid)}/summary`);
+                const res = summary?.info;
+                if (!res) {
+                    previewDiv.innerHTML = `
+                        <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-600 font-bold flex items-center">
+                            <i class="fa-solid fa-circle-xmark mr-2 text-sm"></i> ไม่พบรายชื่อเจ้าหน้าที่รหัสนี้ในระบบ (กรุณาตรวจสอบรหัสอีกครั้ง)
+                        </div>
+                    `;
+                    return;
+                }
+
+                let statusColor = 'text-emerald-600 bg-emerald-50 border-emerald-300';
+                if (res.employmentStatus === 'ปลดราชการ') statusColor = 'text-rose-700 bg-rose-50 border-rose-300';
+                else if (res.employmentStatus === 'พักราชการ') statusColor = 'text-purple-700 bg-purple-50 border-purple-300';
+
+                previewDiv.innerHTML = `
+                    <div class="p-3.5 bg-blue-50/80 border border-blue-200 rounded-xl text-xs space-y-1.5 shadow-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-navy text-sm"><i class="fa-solid fa-circle-check text-emerald-500 mr-1.5"></i> ${escapeHtml(res.fullName)}</span>
+                            <span class="px-2 py-0.5 rounded border text-[11px] font-bold ${statusColor}">${escapeHtml(res.employmentStatus)}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-slate-600 font-medium">
+                            <span><i class="fa-solid fa-building text-blue-600 mr-1"></i>สังกัด: <strong>${escapeHtml(res.department || '-')}</strong></span>
+                            <span><i class="fa-solid fa-shield-halved text-amber-600 mr-1"></i>หน่วย: <strong>${escapeHtml(res.unit || '-')}</strong></span>
+                            <span><i class="fa-solid fa-triangle-exclamation text-rose-500 mr-1"></i>ใบเหลืองสะสม: <strong class="text-rose-600">${res.penaltyCount} ใบ</strong></span>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                previewDiv.innerHTML = `
+                    <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-600 font-bold flex items-center">
+                        <i class="fa-solid fa-circle-xmark mr-2 text-sm"></i> ไม่พบรายชื่อเจ้าหน้าที่รหัสนี้ในระบบ (กรุณาตรวจสอบรหัสอีกครั้ง)
+                    </div>
+                `;
+            }
+        }, 400);
+    }
+
+    async function loadPenaltyTypes(force = false) {
+        if (!force && Array.isArray(OIG_CACHE.penaltyTypes)) {
+            renderPenaltyTypes(OIG_CACHE.penaltyTypes);
+            return;
+        }
+
+        try {
+            const list = await api('/penalty-types');
+            OIG_CACHE.penaltyTypes = Array.isArray(list) ? list : [];
+            renderPenaltyTypes(OIG_CACHE.penaltyTypes);
+        } catch (err) {
+            handleLoadError(err, 'pen_action_type_container');
+        }
+    }
+
+    function renderPenaltyTypes(list) {
+        // Render checkboxes in Tab 3 (Penalty Form)
+        const container = document.getElementById('pen_action_type_container');
+        if (container) {
+            container.innerHTML = list.length
+                ? list.map(p => `
+                    <label class="flex items-center space-x-2 text-xs font-bold text-navy bg-white p-2.5 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-100 transition shadow-sm select-none">
+                        <input type="checkbox" name="pen_action_check" value="${escapeHtml(p.id)}" data-name="${escapeHtml(p.name)}" onchange="toggleFineInput()" class="rounded text-navy focus:ring-navy h-4 w-4">
+                        <span>${escapeHtml(p.name)}</span>
+                    </label>`).join('')
+                : '<p class="text-xs text-slate-400 col-span-full text-center py-2">ไม่พบประเภทบทลงโทษในระบบ</p>';
+        }
+
+        // Render table in Tab 4 (Roles/Settings)
+        const table = document.getElementById('penaltyTypesTable');
+        if (table) {
+            table.innerHTML = list.length
+                ? list.map(p => `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 font-bold text-navy">${escapeHtml(p.name)}</td>
+                        <td class="p-3 text-right">
+                            <button onclick="deletePenaltyType('${escapeHtml(p.id)}')" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg transition" title="ลบ">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>`).join('')
+                : '<tr><td colspan="2" class="p-4 text-center text-xs text-slate-400">ไม่พบประเภทบทลงโทษในระบบ</td></tr>';
+        }
+    }
+
+    function toggleFineInput() {
+        const checkboxes = document.querySelectorAll('input[name="pen_action_check"]:checked');
+        let hasFineType = false;
+        checkboxes.forEach(cb => {
+            const name = cb.getAttribute('data-name') || cb.value;
+            if (name.includes('เปรียบเทียบปรับ') || name.includes('ปรับ')) {
+                hasFineType = true;
+            }
+        });
+
+        const fineContainer = document.getElementById('pen_fine_container');
+        const fineInput = document.getElementById('pen_fine_amount');
+        if (hasFineType) {
+            fineContainer.classList.remove('hidden');
+            fineInput.setAttribute('required', 'true');
+        } else {
+            fineContainer.classList.add('hidden');
+            fineInput.removeAttribute('required');
+            fineInput.value = '';
+        }
+    }
+
+    function togglePenaltyDurationInput() {
+        const type = document.getElementById('pen_type').value;
+        const mC = document.getElementById('pen_month_container');
+        const dC = document.getElementById('pen_date_container');
+        const mI = document.getElementById('pen_months');
+        const sdI = document.getElementById('pen_start_date');
+        const edI = document.getElementById('pen_end_date');
+
+        if (type === 'ระบุเดือน') {
+            mC.classList.remove('hidden');
+            dC.classList.add('hidden');
+            mI.setAttribute('required', 'true');
+            sdI.removeAttribute('required');
+            edI.removeAttribute('required');
+        } else if (type === 'ระบุวัน') {
+            mC.classList.add('hidden');
+            dC.classList.remove('hidden');
+            mI.removeAttribute('required');
+            sdI.setAttribute('required', 'true');
+            edI.setAttribute('required', 'true');
+        } else {
+            mC.classList.add('hidden');
+            dC.classList.add('hidden');
+            mI.removeAttribute('required');
+            sdI.removeAttribute('required');
+            edI.removeAttribute('required');
+        }
+    }
+
+    async function submitPenalty(e) {
+        e.preventDefault();
+        const f = document.getElementById('pen_file').files[0];
+        if (!f) {
+            Swal.fire('แจ้งเตือน', 'กรุณาแนบรูปภาพหลักฐาน', 'warning');
+            return;
+        }
+
+        const checkedBoxes = document.querySelectorAll('input[name="pen_action_check"]:checked');
+        if (checkedBoxes.length === 0) {
+            Swal.fire('แจ้งเตือน', 'กรุณาเลือกประเภทบทลงโทษอย่างน้อย 1 รายการ', 'warning');
+            return;
+        }
+
+        const policeId = document.getElementById('pen_police_id').value.trim();
+        const reason = document.getElementById('pen_reason').value.trim();
+        const durationTypeVal = document.getElementById('pen_type').value;
+        let durationType = 'permanent';
+        if (durationTypeVal === 'ระบุเดือน') durationType = 'months';
+        else if (durationTypeVal === 'ระบุวัน') durationType = 'date_range';
+
+        const formData = new FormData();
+        formData.append('policeId', policeId);
+        checkedBoxes.forEach(cb => formData.append('actionTypeIds', cb.value));
+        formData.append('reason', reason);
+        formData.append('durationType', durationType);
+
+        if (durationType === 'months') {
+            formData.append('months', document.getElementById('pen_months').value);
+        } else if (durationType === 'date_range') {
+            formData.append('startDate', document.getElementById('pen_start_date').value);
+            formData.append('endDate', document.getElementById('pen_end_date').value);
+        }
+
+        const fineAmount = document.getElementById('pen_fine_amount')?.value;
+        if (fineAmount) {
+            formData.append('fineAmount', fineAmount);
+        }
+        formData.append('evidence', f);
+
+        Swal.fire({ title: 'กำลังบันทึกและอัปโหลดหลักฐาน...', didOpen: () => Swal.showLoading() });
+        try {
+            const res = await api('/penalties', {
+                method: 'POST',
+                body: formData
+            });
+
+            document.getElementById('penaltyForm').reset();
+            document.getElementById('pen_user_preview').classList.add('hidden');
+            document.getElementById('pen_user_preview').innerHTML = '';
+            togglePenaltyDurationInput();
+            toggleFineInput();
+            invalidateRosterCache();
+
+            if (res.penaltyCount >= 3 || res.isPermanent) {
+                const choice = await Swal.fire({
+                    title: 'คำเตือนวินัยร้ายแรง!',
+                    text: `เจ้าหน้าที่รหัส ${policeId} สะสมโทษครบ ${res.penaltyCount} ใบ ${res.isPermanent ? '(มีโทษถาวร)' : ''} คุณต้องการปรับสถานะเจ้าหน้าที่นายนี้หรือไม่?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonColor: '#d33',
+                    denyButtonColor: '#9333ea',
+                    cancelButtonColor: '#0B1E36',
+                    confirmButtonText: 'ส่งปลดราชการ',
+                    denyButtonText: 'สั่งพักราชการ',
+                    cancelButtonText: 'ยังไม่เปลี่ยนสถานะ'
+                });
+
+                if (choice.isConfirmed || choice.isDenied) {
+                    const nextStatus = choice.isConfirmed ? 'ปลดราชการ' : 'พักราชการ';
+                    try {
+                        const sum = await api(`/members/by-police-id/${encodeURIComponent(policeId)}/summary`);
+                        if (sum?.info?.id) {
+                            await api(`/members/${sum.info.id}/status`, {
+                                method: 'PATCH',
+                                body: { employmentStatus: nextStatus }
+                            });
+                            Swal.fire('ปรับสถานะแล้ว', `ปรับสถานะเป็น "${nextStatus}" เรียบร้อย`, 'success');
+                        }
+                    } catch (err) {
+                        console.warn(err);
+                    }
+                }
+            } else {
+                Swal.fire('สำเร็จ', 'บันทึกการลงโทษเรียบร้อยแล้ว', 'success');
+            }
+            switchTab('roster');
+        } catch (err) {
+            Swal.fire('ผิดพลาด', err.message, 'error');
+        }
+    }
+
+    async function addPenaltyType() {
+        const name = document.getElementById('new_penalty_type_name').value.trim();
+        if (!name) return;
+
+        Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
+        try {
+            await api('/penalty-types', {
+                method: 'POST',
+                body: { name }
+            });
+            document.getElementById('new_penalty_type_name').value = '';
+            invalidateCache('penaltyTypes');
+            await loadPenaltyTypes(true);
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'เพิ่มประเภทโทษสำเร็จ', showConfirmButton: false, timer: 1500 });
+        } catch (err) {
+            Swal.fire('ผิดพลาด', err.message, 'error');
+        }
+    }
+
+    async function deletePenaltyType(id) {
+        const res = await Swal.fire({
+            title: 'ลบประเภทการลงโทษ?',
+            text: 'หากมีบันทึกการลงโทษที่อ้างอิงประเภทนี้อยู่ จะไม่สามารถลบได้',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'ลบ',
+            cancelButtonText: 'ยกเลิก'
+        });
+
+        if (res.isConfirmed) {
+            Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() });
+            try {
+                await api(`/penalty-types/${id}`, { method: 'DELETE' });
+                invalidateCache('penaltyTypes');
+                await loadPenaltyTypes(true);
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ลบสำเร็จ', showConfirmButton: false, timer: 1500 });
+            } catch (err) {
+                Swal.fire('ผิดพลาด', err.message, 'error');
+            }
+        }
+    }
+
+    // ==========================================
+    // TAB 2: BATCH INSERT
+    // ==========================================
+    function addMemberRow() {
+        const c = document.getElementById('member-rows-container');
+        const newRow = c.querySelector('.member-row').cloneNode(true);
+        newRow.querySelector('input[name="policeId"]').value = '';
+        newRow.querySelector('input[name="nameOnly"]').value = '';
+        newRow.querySelector('input[name="unit"]').value = '';
+        newRow.querySelector('.remove-btn').classList.remove('hidden');
+        c.appendChild(newRow);
+    }
+
+    function removeMemberRow(btn) {
+        if (document.querySelectorAll('.member-row').length > 1) {
+            btn.closest('.member-row').remove();
+        }
+    }
+    
+    async function submitNewMembers(e) {
+        e.preventDefault();
+        const rows = document.querySelectorAll('.member-row');
+        const membersData = [];
+        
+        rows.forEach(r => {
+            const medPrefix = r.querySelector('select[name="medPrefix"]').value;
+            const rank = r.querySelector('select[name="rank"]').value;
+            const rawName = r.querySelector('input[name="nameOnly"]').value.trim();
+            const gen = parseInt(r.querySelector('input[name="gen"]').value, 10);
+            const pid = r.querySelector('input[name="policeId"]').value.trim();
+            const dept = r.querySelector('select[name="department"]').value;
+            const unit = r.querySelector('input[name="unit"]').value.trim();
+
+            membersData.push({
+                generation: gen,
+                policeId: pid,
+                rank: rank !== 'ไม่ระบุ' ? rank : '',
+                medicalPrefix: medPrefix,
+                fullName: rawName,
+                department: dept !== '-' ? dept : '',
+                unit: unit,
+                employmentStatus: 'รับราชการ'
             });
         });
-    }
 
-    function togglePenaltyDurationInput() { 
-        const type = document.getElementById('pen_type').value;
-        document.getElementById('pen_month_container').classList.toggle('hidden', type !== 'ระบุเดือน');
-        document.getElementById('pen_date_container').classList.toggle('hidden', type !== 'ระบุวัน');
-    }
-
-    function submitPenalty(e) {
-        e.preventDefault(); const f = document.getElementById('pen_file').files[0]; if(!f) return;
-        Swal.fire({ title: 'กำลังอัปโหลด...', didOpen: () => Swal.showLoading() });
-        const reader = new FileReader();
-        reader.onload = function(ev) {
-            const formData = { policeId: document.getElementById('pen_police_id').value, actionType: document.getElementById('pen_action_type').value, reason: document.getElementById('pen_reason').value, type: document.getElementById('pen_type').value, months: document.getElementById('pen_months').value, startDate: document.getElementById('pen_start_date').value, endDate: document.getElementById('pen_end_date').value, base64Image: ev.target.result.split(',')[1], mimeType: f.type, fileName: f.name, punisherId: currentUser.id };
-            apiCall('addPenalty', { formData }).then(() => { Swal.fire('สำเร็จ', 'ลงโทษเรียบร้อย', 'success'); document.getElementById('penaltyForm').reset(); togglePenaltyDurationInput(); document.getElementById('rosterSearchInput').value = formData.policeId; switchTab('roster'); }).catch(e => Swal.fire('Error', e.message, 'error'));
-        }; reader.readAsDataURL(f);
-    }
-
-    function addMemberRow() { const c = document.getElementById('member-rows-container'); const newRow = c.querySelector('.member-row').cloneNode(true); newRow.querySelector('input[name="policeId"]').value = ''; newRow.querySelector('input[name="fullName"]').value = ''; newRow.querySelector('.remove-btn').classList.remove('hidden'); c.appendChild(newRow); }
-    function removeMemberRow(btn) { if(document.querySelectorAll('.member-row').length > 1) btn.closest('.member-row').remove(); }
-    
-    function submitNewMembers(e) {
-        e.preventDefault(); const rows = document.querySelectorAll('.member-row'); const membersData = [];
-        rows.forEach(r => membersData.push({ gen: r.querySelector('input[name="gen"]').value, policeId: r.querySelector('input[name="policeId"]').value, fullName: r.querySelector('input[name="fullName"]').value }));
         Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
-        apiCall('addNewMembers', { data: membersData }).then(() => { Swal.fire('สำเร็จ', '', 'success'); document.getElementById('addMemberForm').reset(); document.getElementById('rosterSearchInput').value = membersData[0].policeId; switchTab('roster'); }).catch(e => Swal.fire('Error', e.message, 'error'));
+        try {
+            await api('/members/bulk', {
+                method: 'POST',
+                body: { members: membersData }
+            });
+            Swal.fire('สำเร็จ', 'เพิ่มรายชื่อเจ้าหน้าที่เรียบร้อย', 'success');
+            document.getElementById('addMemberForm').reset();
+            invalidateRosterCache();
+            invalidateCache('department');
+            switchTab('roster');
+            loadDepartmentFilterOptions(true);
+        } catch (err) {
+            Swal.fire('ผิดพลาด', err.message, 'error');
+        }
     }
 
-    function loadRoles() { apiCall('getUsersList').then(r => { const t = document.getElementById('usersListTable'); t.innerHTML=''; r.forEach(u => t.innerHTML += `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="p-3 font-mono text-xs opacity-70 whitespace-nowrap">${u.discordId}</td><td class="p-3 font-bold text-navy whitespace-nowrap">${u.name}</td><td class="p-3 text-gold font-bold whitespace-nowrap">${u.role}</td></tr>`); }); }
-    function loadAuditLogs() { apiCall('getAuditLogs').then(r => { const t = document.getElementById('auditListTable'); t.innerHTML=''; r.forEach(l => t.innerHTML += `<tr class="hover:bg-slate-50 transition"><td class="p-3 opacity-70 border-b border-slate-100 whitespace-nowrap">${l.date}</td><td class="p-3 border-b border-slate-100 text-navy font-mono whitespace-nowrap">${l.admin}</td><td class="p-3 border-b border-slate-100">${l.details}</td></tr>`); }); }
-    
-    function updateRole() {
-        const targetId = document.getElementById('role_discord_id').value; const newRole = document.getElementById('role_select').value;
-        if(!targetId) return; Swal.fire({ title: 'กำลังดำเนินการ...', didOpen: () => Swal.showLoading() });
-        apiCall('updateUserRole', { targetId, newRole, requesterRole: currentUser.role, requesterId: currentUser.id }).then(() => { Swal.fire('สำเร็จ', '', 'success'); loadRoles(); document.getElementById('role_discord_id').value=''; }).catch(e => Swal.fire('Error', e.message, 'error'));
+    // ==========================================
+    // TAB 1.5: RULEBOOK
+    // ==========================================
+    async function loadRulebook(force = false) {
+        const tbody = document.getElementById('rulebook-container');
+        if (!tbody) return;
+
+        if (!force && Array.isArray(OIG_CACHE.rulebook)) {
+            renderRulebook(OIG_CACHE.rulebook);
+            return;
+        }
+
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-10"><i class="fa-solid fa-spinner fa-spin text-3xl text-navy"></i></td></tr>';
+        try {
+            const list = await api('/penalty-rules');
+            OIG_CACHE.rulebook = Array.isArray(list) ? list : [];
+            renderRulebook(OIG_CACHE.rulebook);
+        } catch (err) {
+            handleLoadError(err, 'rulebook-container');
+        }
     }
 
-    function openRuleModal() { document.getElementById('ruleForm').reset(); document.getElementById('rule_id').value = ''; document.getElementById('ruleModal').classList.replace('hidden', 'flex'); }
-    function closeRuleModal() { document.getElementById('ruleModal').classList.replace('flex', 'hidden'); }
-    function editRule(id) { const r = globalRuleData.find(x => x.id === id); if(!r) return; document.getElementById('rule_id').value = r.id; document.getElementById('rule_category').value = r.category; document.getElementById('rule_name').value = r.name; document.getElementById('rule_desc').value = r.description; document.getElementById('rule_fine').value = r.fine; document.getElementById('rule_jail').value = r.jail; document.getElementById('ruleModal').classList.replace('hidden', 'flex'); }
-    function deleteRule(id) { Swal.fire({ title: 'ลบข้อมูลกฎหมาย?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then(r => { if(r.isConfirmed) { Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() }); apiCall('deletePenaltyRule', { id, updaterId: currentUser.id, updaterRole: currentUser.role }).then(loadRulebook).catch(e => Swal.fire('Error', e.message, 'error')); }}); }
-    function submitRule(e) { e.preventDefault(); const data = { id: document.getElementById('rule_id').value, name: document.getElementById('rule_name').value, category: document.getElementById('rule_category').value, description: document.getElementById('rule_desc').value, fine: document.getElementById('rule_fine').value, jail: document.getElementById('rule_jail').value }; Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() }); apiCall('savePenaltyRule', { data, updaterId: currentUser.id, updaterRole: currentUser.role }).then(() => { closeRuleModal(); loadRulebook(); Swal.fire('สำเร็จ', 'อัปเดตบทลงโทษเรียบร้อย', 'success'); }).catch(e => Swal.fire('Error', e.message, 'error')); }
+    function formatFine(val) {
+        if (!val || val === '0') return '-';
+        if (!isNaN(val)) return '$' + Number(val).toLocaleString();
+        return escapeHtml(val);
+    }
+
+    function formatJail(val) {
+        if (!val || val === '0') return '-';
+        if (!isNaN(val)) return escapeHtml(val) + ' เดือน';
+        return escapeHtml(val);
+    }
+
+    function renderRulebook(data) {
+        globalRuleData = Array.isArray(data) ? data : [];
+        const tbody = document.getElementById('rulebook-container');
+        if (!tbody) return;
+
+        const canManage = currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Owner');
+        if (!globalRuleData.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-slate-500 font-bold">ไม่มีข้อมูลบทลงโทษในฐานข้อมูล</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = globalRuleData.map(r => {
+            const actions = canManage 
+                ? `<button onclick="editRule('${escapeHtml(r.id)}')" class="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition mr-1" title="แก้ไข"><i class="fa-solid fa-pen"></i></button><button onclick="deleteRule('${escapeHtml(r.id)}')" class="text-rose-600 hover:bg-rose-50 p-2 rounded-lg transition" title="ลบ"><i class="fa-solid fa-trash-can"></i></button>`
+                : '-';
+
+            return `<tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                <td class="p-4 align-top font-bold text-navy whitespace-nowrap">${escapeHtml(r.category)}</td>
+                <td class="p-4 align-top font-semibold text-slate-800">${escapeHtml(r.name)}</td>
+                <td class="p-4 align-top text-xs text-slate-600 whitespace-pre-wrap leading-relaxed">${escapeHtml(r.description || '-')}</td>
+                <td class="p-4 align-top text-right text-emerald-600 font-bold whitespace-nowrap">${formatFine(r.fine)}</td>
+                <td class="p-4 align-top text-right text-rose-600 font-bold whitespace-nowrap">${formatJail(r.jail)}</td>
+                <td class="p-4 align-top text-center whitespace-nowrap">${actions}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    function openRuleModal() {
+        document.getElementById('ruleForm').reset();
+        document.getElementById('rule_id').value = '';
+        document.getElementById('ruleModalTitle').innerText = 'เพิ่มบทลงโทษใหม่';
+        document.getElementById('ruleModal').classList.replace('hidden', 'flex');
+    }
+
+    function editRule(id) {
+        const r = globalRuleData.find(x => x.id === id);
+        if (!r) return;
+        document.getElementById('rule_id').value = r.id;
+        document.getElementById('rule_name').value = r.name;
+        document.getElementById('rule_category').value = r.category;
+        document.getElementById('rule_fine').value = r.fine || '';
+        document.getElementById('rule_jail').value = r.jail || '';
+        document.getElementById('rule_desc').value = r.description || '';
+        document.getElementById('ruleModalTitle').innerText = 'แก้ไขบทลงโทษ';
+        document.getElementById('ruleModal').classList.replace('hidden', 'flex');
+    }
+
+    function closeRuleModal() {
+        document.getElementById('ruleModal').classList.replace('flex', 'hidden');
+    }
+
+    async function submitRule(e) {
+        e.preventDefault();
+        const ruleId = document.getElementById('rule_id').value;
+        const payload = {
+            category: document.getElementById('rule_category').value.trim(),
+            name: document.getElementById('rule_name').value.trim(),
+            description: document.getElementById('rule_desc').value.trim(),
+            fine: document.getElementById('rule_fine').value.trim(),
+            jail: document.getElementById('rule_jail').value.trim()
+        };
+
+        Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
+        try {
+            if (ruleId) {
+                await api(`/penalty-rules/${ruleId}`, { method: 'PATCH', body: payload });
+            } else {
+                await api('/penalty-rules', { method: 'POST', body: payload });
+            }
+            closeRuleModal();
+            invalidateCache('rulebook');
+            await loadRulebook(true);
+            Swal.fire('สำเร็จ', 'อัปเดตบทลงโทษเรียบร้อย', 'success');
+        } catch (err) {
+            Swal.fire('ผิดพลาด', err.message, 'error');
+        }
+    }
+
+    async function deleteRule(id) {
+        const res = await Swal.fire({
+            title: 'ยืนยันการลบ?',
+            text: 'คุณต้องการลบบทลงโทษนี้ออกจากฐานข้อมูลใช่หรือไม่',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'ลบ',
+            cancelButtonText: 'ยกเลิก'
+        });
+
+        if (res.isConfirmed) {
+            Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() });
+            try {
+                await api(`/penalty-rules/${id}`, { method: 'DELETE' });
+                invalidateCache('rulebook');
+                await loadRulebook(true);
+                Swal.fire('สำเร็จ', 'ลบข้อมูลเรียบร้อย', 'success');
+            } catch (err) {
+                Swal.fire('ผิดพลาด', err.message, 'error');
+            }
+        }
+    }
+
+    // ==========================================
+    // TAB 4: ROLES & AUDIT
+    // ==========================================
+    async function loadRoles(force = false) {
+        if (!force && Array.isArray(OIG_CACHE.users)) {
+            renderRoles(OIG_CACHE.users);
+            return;
+        }
+
+        try {
+            const res = await api('/users?page=1&limit=100');
+            const list = Array.isArray(res?.items) ? res.items : [];
+            OIG_CACHE.users = list;
+            renderRoles(list);
+        } catch (err) {
+            handleLoadError(err, 'usersListTable');
+        }
+    }
+
+    function renderRoles(list) {
+        const t = document.getElementById('usersListTable');
+        if (t) {
+            t.innerHTML = list.length
+                ? list.map(u => `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 font-mono text-xs opacity-70 whitespace-nowrap">${escapeHtml(u.discordId)}</td>
+                        <td class="p-3 font-bold text-navy whitespace-nowrap">${escapeHtml(u.name)}</td>
+                        <td class="p-3 text-gold font-bold whitespace-nowrap">${escapeHtml(u.role)}</td>
+                    </tr>`).join('')
+                : '<tr><td colspan="3" class="p-4 text-center text-xs text-slate-400">ไม่พบข้อมูลผู้ใช้งาน</td></tr>';
+        }
+
+        const sel = document.getElementById('role_target_user');
+        if (sel) {
+            sel.innerHTML = '<option value="">เลือกผู้ใช้ที่ต้องการเปลี่ยนยศ...</option>' +
+                list.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name)} (${escapeHtml(u.role)})</option>`).join('');
+        }
+    }
+
+    async function updateRole() {
+        const userId = document.getElementById('role_target_user').value;
+        const role = document.getElementById('role_select').value;
+        if (!userId) {
+            Swal.fire('แจ้งเตือน', 'กรุณาเลือกผู้ใช้งานที่ต้องการปรับยศ', 'warning');
+            return;
+        }
+
+        Swal.fire({ title: 'กำลังดำเนินการ...', didOpen: () => Swal.showLoading() });
+        try {
+            await api(`/users/${userId}/role`, {
+                method: 'PATCH',
+                body: { role }
+            });
+            Swal.fire('สำเร็จ', 'อัปเดตยศเรียบร้อย', 'success');
+            invalidateCache('users');
+            invalidateCache('auditLogs');
+            loadRoles(true);
+            loadAuditLogs(true);
+        } catch (err) {
+            Swal.fire('ไม่สามารถทำได้', err.message, 'error');
+        }
+    }
+
+    async function loadAuditLogs(force = false) {
+        if (!force && Array.isArray(OIG_CACHE.auditLogs)) {
+            renderAuditLogs(OIG_CACHE.auditLogs);
+            return;
+        }
+
+        try {
+            const res = await api('/audit-logs?page=1&limit=50');
+            const list = Array.isArray(res?.items) ? res.items : [];
+            OIG_CACHE.auditLogs = list;
+            renderAuditLogs(list);
+        } catch (err) {
+            handleLoadError(err, 'auditListTable');
+        }
+    }
+
+    function renderAuditLogs(list) {
+        const t = document.getElementById('auditListTable');
+        if (!t) return;
+
+        t.innerHTML = list.length
+            ? list.map(l => `
+                <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                    <td class="p-3 opacity-70 whitespace-nowrap">${formatBangkokDate(l.createdAt)}</td>
+                    <td class="p-3 text-navy font-mono text-[11px] whitespace-nowrap">${escapeHtml(l.actorId)}</td>
+                    <td class="p-3 font-semibold text-slate-700 whitespace-nowrap">${escapeHtml(l.action)}</td>
+                    <td class="p-3 text-slate-600">${escapeHtml(l.description)}</td>
+                </tr>`).join('')
+            : '<tr><td colspan="4" class="p-4 text-center text-xs text-slate-400">ไม่พบประวัติการทำงาน</td></tr>';
+    }
+
+    // ==========================================
+    // INITIALIZATION ON PAGE LOAD
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+        initAuth();
+    });
 </script>
 </body>
 </html>

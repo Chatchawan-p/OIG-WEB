@@ -4,6 +4,7 @@ package router
 import (
 	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/oig-police/oig-web/internal/authz"
@@ -50,6 +51,14 @@ func New(cfg config.Config, log *slog.Logger, checker handler.HealthChecker, dep
 	if cfg.SwaggerEnabled {
 		engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
+
+	engine.GET("/", func(c *gin.Context) {
+		if _, err := os.Stat("index.html"); err == nil {
+			c.File("index.html")
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "app": "OIG Police Management API"})
+	})
 
 	engine.NoRoute(func(c *gin.Context) {
 		response.Failure(c, http.StatusNotFound, "route not found", "NOT_FOUND", nil)
