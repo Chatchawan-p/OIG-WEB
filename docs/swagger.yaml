@@ -1,0 +1,1365 @@
+basePath: /
+definitions:
+  dto.AuditLog:
+    properties:
+      action:
+        type: string
+      actorId:
+        type: string
+      createdAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      resourceId:
+        type: string
+      resourceType:
+        type: string
+    type: object
+  dto.AuditLogList:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.AuditLog'
+        type: array
+      pagination:
+        $ref: '#/definitions/dto.Pagination'
+    type: object
+  dto.AuthToken:
+    properties:
+      accessToken:
+        type: string
+      expiresIn:
+        example: 900
+        type: integer
+      tokenType:
+        example: Bearer
+        type: string
+      user:
+        $ref: '#/definitions/dto.AuthUser'
+    type: object
+  dto.AuthUser:
+    properties:
+      avatar:
+        type: string
+      discordId:
+        example: "123456789012345678"
+        type: string
+      id:
+        example: usr_0123456789abcdef
+        type: string
+      isAuthorized:
+        example: true
+        type: boolean
+      name:
+        example: Inspector General
+        type: string
+      role:
+        enum:
+        - Owner
+        - Screener
+        - Admin
+        - Guest
+        type: string
+    type: object
+  dto.BulkCreateMembersRequest:
+    properties:
+      members:
+        items:
+          $ref: '#/definitions/dto.CreateMemberRequest'
+        maxItems: 100
+        minItems: 1
+        type: array
+    required:
+    - members
+    type: object
+  dto.CreateMemberRequest:
+    properties:
+      department:
+        example: Internal Affairs
+        type: string
+      employmentStatus:
+        example: รับราชการ
+        type: string
+      fullName:
+        example: Somchai Jaidee
+        type: string
+      generation:
+        example: 12
+        minimum: 1
+        type: integer
+      medicalPrefix:
+        example: Dr.
+        type: string
+      policeId:
+        example: OIG-001
+        type: string
+      rank:
+        example: Pol. Col.
+        type: string
+      unit:
+        example: Investigation
+        type: string
+    required:
+    - fullName
+    - generation
+    - policeId
+    type: object
+  dto.CreatePenaltyResult:
+    properties:
+      isPermanent:
+        type: boolean
+      penaltyCount:
+        type: integer
+      penaltyId:
+        type: string
+    type: object
+  dto.CreatePenaltyTypeRequest:
+    properties:
+      legacyId:
+        example: PT001
+        type: string
+      name:
+        example: Written warning
+        type: string
+    required:
+    - name
+    type: object
+  dto.Departments:
+    properties:
+      items:
+        items:
+          type: string
+        type: array
+    type: object
+  dto.Member:
+    properties:
+      createdAt:
+        type: string
+      department:
+        type: string
+      employmentStatus:
+        type: string
+      fullName:
+        type: string
+      generation:
+        type: integer
+      id:
+        type: string
+      medicalPrefix:
+        type: string
+      penaltyCount:
+        type: integer
+      policeId:
+        type: string
+      rank:
+        type: string
+      unit:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  dto.MemberDetail:
+    properties:
+      member:
+        $ref: '#/definitions/dto.Member'
+      nameHistory:
+        items:
+          $ref: '#/definitions/dto.NameHistory'
+        type: array
+    type: object
+  dto.MemberList:
+    properties:
+      groupedByGeneration:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/dto.Member'
+          type: array
+        type: object
+      items:
+        items:
+          $ref: '#/definitions/dto.Member'
+        type: array
+      pagination:
+        $ref: '#/definitions/dto.Pagination'
+    type: object
+  dto.MemberSummary:
+    properties:
+      info:
+        $ref: '#/definitions/dto.Member'
+      penalties:
+        items:
+          $ref: '#/definitions/dto.Penalty'
+        type: array
+      seriousWarning:
+        type: boolean
+    type: object
+  dto.NameHistory:
+    properties:
+      changedAt:
+        type: string
+      changedBy:
+        type: string
+      generation:
+        type: integer
+      id:
+        type: string
+      newName:
+        type: string
+      oldName:
+        type: string
+      policeId:
+        type: string
+    type: object
+  dto.Pagination:
+    properties:
+      limit:
+        example: 20
+        type: integer
+      page:
+        example: 1
+        type: integer
+      total:
+        example: 0
+        type: integer
+    type: object
+  dto.PardonPenaltyRequest:
+    properties:
+      reason:
+        example: Pardoned after review
+        type: string
+    required:
+    - reason
+    type: object
+  dto.PardonPenaltyResult:
+    properties:
+      penalty:
+        $ref: '#/definitions/dto.Penalty'
+      penaltyCount:
+        type: integer
+    type: object
+  dto.Penalty:
+    properties:
+      actionTypeIds:
+        items:
+          type: string
+        type: array
+      actionTypes:
+        items:
+          type: string
+        type: array
+      createdAt:
+        type: string
+      createdBy:
+        type: string
+      durationType:
+        enum:
+        - permanent
+        - months
+        - date_range
+        type: string
+      evidenceId:
+        type: string
+      evidenceUrl:
+        type: string
+      expiryDate:
+        type: string
+      fineAmount:
+        type: integer
+      id:
+        type: string
+      isActive:
+        type: boolean
+      isPermanent:
+        type: boolean
+      memberId:
+        type: string
+      months:
+        type: integer
+      pardonReason:
+        type: string
+      pardonedAt:
+        type: string
+      pardonedBy:
+        type: string
+      policeId:
+        type: string
+      reason:
+        type: string
+      startDate:
+        type: string
+    type: object
+  dto.PenaltyRule:
+    properties:
+      category:
+        type: string
+      createdAt:
+        type: string
+      description:
+        type: string
+      fine:
+        type: string
+      id:
+        type: string
+      jail:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  dto.PenaltyRuleRequest:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      fine:
+        type: string
+      jail:
+        type: string
+      name:
+        type: string
+    required:
+    - category
+    - name
+    type: object
+  dto.PenaltyType:
+    properties:
+      id:
+        type: string
+      legacyId:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.UpdateMemberRequest:
+    properties:
+      department:
+        type: string
+      fullName:
+        type: string
+      generation:
+        minimum: 1
+        type: integer
+      medicalPrefix:
+        type: string
+      rank:
+        type: string
+      unit:
+        type: string
+    type: object
+  dto.UpdateMemberStatusRequest:
+    properties:
+      employmentStatus:
+        example: ปลดราชการ
+        type: string
+    required:
+    - employmentStatus
+    type: object
+  dto.UpdateRoleRequest:
+    properties:
+      role:
+        enum:
+        - Screener
+        - Admin
+        - Guest
+        type: string
+    required:
+    - role
+    type: object
+  dto.User:
+    properties:
+      avatar:
+        type: string
+      createdAt:
+        type: string
+      discordId:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  dto.UserList:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.User'
+        type: array
+      pagination:
+        $ref: '#/definitions/dto.Pagination'
+    type: object
+  handler.HealthData:
+    properties:
+      status:
+        example: up
+        type: string
+    type: object
+  response.Envelope:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/response.ErrorBody'
+      message:
+        example: ok
+        type: string
+      status:
+        example: 200
+        type: integer
+    type: object
+  response.ErrorBody:
+    properties:
+      code:
+        example: VALIDATION_ERROR
+        type: string
+      details: {}
+    type: object
+info:
+  contact: {}
+  description: Production-oriented REST API for the OIG Police Management System.
+  title: OIG Police Management API
+  version: 1.0.0
+paths:
+  /api/v1/audit-logs:
+    get:
+      parameters:
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - default: 50
+        description: Limit
+        in: query
+        maximum: 200
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AuditLogList'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List immutable audit logs newest first
+      tags:
+      - Audit
+  /api/v1/auth/discord/callback:
+    get:
+      description: Validates OAuth state, exchanges the code server-side, resolves
+        a pre-provisioned user, and issues a JWT. If return_to was set, redirects
+        (HTTP 303) to that destination; otherwise returns JSON.
+      parameters:
+      - description: Discord authorization code
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: OAuth state
+        in: query
+        name: state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AuthToken'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      summary: Complete Discord OAuth2 login
+      tags:
+      - Authentication
+  /api/v1/auth/discord/login:
+    get:
+      description: Initiates Discord OAuth2 authentication. Sets a short-lived state
+        cookie and redirects (HTTP 302) to Discord. Optional return_to must use an
+        allowed frontend origin.
+      parameters:
+      - description: Optional frontend destination URL after successful login (e.g.
+          http://localhost:3000). Must match an allowed frontend origin. Do NOT use
+          DISCORD_REDIRECT_URI here.
+        example: http://localhost:3000
+        in: query
+        name: return_to
+        type: string
+      responses:
+        "302":
+          description: Found
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      summary: Start Discord OAuth2 login
+      tags:
+      - Authentication
+  /api/v1/auth/logout:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Revoke current user's active tokens
+      tags:
+      - Authentication
+  /api/v1/auth/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AuthUser'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - Authentication
+  /api/v1/evidence/{id}:
+    get:
+      parameters:
+      - description: Evidence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - image/jpeg
+      - image/png
+      - image/webp
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Retrieve authorized penalty evidence
+      tags:
+      - Penalties
+  /api/v1/members:
+    get:
+      description: Returns deterministic paginated items and the same page grouped
+        by generation for frontend rendering.
+      parameters:
+      - description: Search Police ID, name, rank, department, or unit
+        in: query
+        name: query
+        type: string
+      - description: Employment status
+        in: query
+        name: empFilter
+        type: string
+      - description: 'Active penalty count: 0, 1, 2, or 3 for 3+'
+        in: query
+        name: discFilter
+        type: string
+      - description: Department
+        in: query
+        name: deptFilter
+        type: string
+      - description: Generation or inclusive min-max
+        in: query
+        name: genRangeFilter
+        type: string
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Limit
+        in: query
+        maximum: 500
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MemberList'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: List and filter police members
+      tags:
+      - Members
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Member
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMemberRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.Member'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Create a police member
+      tags:
+      - Members
+  /api/v1/members/{id}:
+    delete:
+      parameters:
+      - description: Stable member ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Soft-delete a member
+      tags:
+      - Members
+    get:
+      parameters:
+      - description: Stable member ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MemberDetail'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Get member profile
+      tags:
+      - Members
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Stable member ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMemberRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.Member'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Update a member and automatically record name history
+      tags:
+      - Members
+  /api/v1/members/{id}/penalties:
+    get:
+      parameters:
+      - description: Stable member ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.Penalty'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List a member's complete penalty history
+      tags:
+      - Penalties
+  /api/v1/members/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Stable member ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMemberStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.Member'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update employment status
+      tags:
+      - Members
+  /api/v1/members/bulk:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Members
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BulkCreateMembersRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.Member'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Atomically create up to 100 members
+      tags:
+      - Members
+  /api/v1/members/by-police-id/{policeId}/summary:
+    get:
+      parameters:
+      - description: Police ID
+        in: path
+        name: policeId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MemberSummary'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get member disciplinary summary by Police ID
+      tags:
+      - Members
+  /api/v1/metadata/departments:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.Departments'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List distinct stored department options
+      tags:
+      - Metadata
+  /api/v1/penalties:
+    post:
+      consumes:
+      - multipart/form-data
+      description: actionTypeIds accepts repeated form fields, a JSON string array,
+        or comma-separated IDs/names/legacy PT identifiers. JPEG, PNG, and WebP evidence
+        only.
+      parameters:
+      - description: Police ID
+        in: formData
+        name: policeId
+        required: true
+        type: string
+      - collectionFormat: csv
+        description: One or more type identifiers
+        in: formData
+        items:
+          type: string
+        name: actionTypeIds
+        required: true
+        type: array
+      - description: Reason
+        in: formData
+        name: reason
+        required: true
+        type: string
+      - description: permanent, months, or date_range
+        in: formData
+        name: durationType
+        required: true
+        type: string
+      - description: Months for months duration
+        in: formData
+        name: months
+        type: integer
+      - description: YYYY-MM-DD; required for date_range
+        in: formData
+        name: startDate
+        type: string
+      - description: Inclusive YYYY-MM-DD; required for date_range
+        in: formData
+        name: endDate
+        type: string
+      - description: Fine in the smallest configured currency unit
+        in: formData
+        name: fineAmount
+        type: integer
+      - description: JPEG, PNG, or WebP evidence
+        in: formData
+        name: evidence
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CreatePenaltyResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "413":
+          description: Request Entity Too Large
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Create a disciplinary penalty with evidence
+      tags:
+      - Penalties
+  /api/v1/penalties/{id}:
+    get:
+      parameters:
+      - description: Penalty ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.Penalty'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Get penalty details
+      tags:
+      - Penalties
+  /api/v1/penalties/{id}/pardon:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Penalty ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Pardon reason
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PardonPenaltyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.PardonPenaltyResult'
+              type: object
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Pardon a penalty without deleting its history
+      tags:
+      - Penalties
+  /api/v1/penalty-rules:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.PenaltyRule'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List penalty catalog rules
+      tags:
+      - Penalty Catalog
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Rule
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PenaltyRuleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.PenaltyRule'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Create a penalty catalog rule (Owner/Admin)
+      tags:
+      - Penalty Catalog
+  /api/v1/penalty-rules/{id}:
+    delete:
+      parameters:
+      - description: Rule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Delete a penalty catalog rule (Owner/Admin)
+      tags:
+      - Penalty Catalog
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Rule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Rule
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PenaltyRuleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.PenaltyRule'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update a penalty catalog rule (Owner/Admin)
+      tags:
+      - Penalty Catalog
+  /api/v1/penalty-types:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.PenaltyType'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List penalty types
+      tags:
+      - Penalty Types
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Penalty type
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePenaltyTypeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.PenaltyType'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Create a penalty type
+      tags:
+      - Penalty Types
+  /api/v1/penalty-types/{id}:
+    delete:
+      parameters:
+      - description: Penalty type ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Delete an unreferenced penalty type
+      tags:
+      - Penalty Types
+  /api/v1/users:
+    get:
+      parameters:
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Limit
+        in: query
+        maximum: 100
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserList'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List internal users
+      tags:
+      - Users
+  /api/v1/users/{id}/role:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New role
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.User'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Change a user's role using the server-side hierarchy policy
+      tags:
+      - Users
+  /health:
+    get:
+      description: Reports whether the API process is running.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.HealthData'
+              type: object
+      summary: Liveness probe
+      tags:
+      - System
+  /ready:
+    get:
+      description: Reports whether required dependencies are reachable.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.HealthData'
+              type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      summary: Readiness probe
+      tags:
+      - System
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    description: Enter "Bearer {token}".
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
